@@ -41,18 +41,26 @@ const EXPECTED_MODIFY = { id: "t-101", label: "Buy noise-cancelling headphones",
   why: 'He said "you can cancel the task about getting headphones". The fixture also holds "Return the headphones to Amazon" (t-102) as a decoy.' };
 
 const r: ParseResult = JSON.parse(readFileSync("last-parse.json", "utf8"));
-const created = r.created.map((c) => ({ title: String(c.item.title ?? ""), due: c.item.due ? String(c.item.due) : null, urgent: c.item.urgent, conf: c.confidence }));
+const created = r.created.map((c) => ({
+  title: String(c.item.title ?? ""),
+  due: c.item.due ? String(c.item.due) : null,
+  urgent: c.item.urgent,
+  conf: c.confidence,
+  removed: c.removed ?? [],
+  dropped: c.dropped ?? [],
+}));
 
 const dueOk = (want: unknown, got: string | null) =>
   want === null ? got === null : want instanceof RegExp ? !!got && want.test(got) : got === want;
 
 const pad = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1) + "…" : s.padEnd(n));
 const faults: string[] = [];
+const caught: string[] = [];
 const usedIndexes = new Set<number>();
 
 console.log(`\n  model ${r.model}   ${r.elapsed_ms}ms\n`);
-console.log(`  ${pad("EXPECTED", 26)}${pad("RETURNED", 44)}VERDICT`);
-console.log(`  ${"─".repeat(96)}`);
+console.log(`  ${pad("EXPECTED", 26)}${pad("RETURNED", 58)}VERDICT`);
+console.log(`  ${"─".repeat(110)}`);
 
 for (const e of EXPECTED) {
   const hits = created.map((c, i) => ({ c, i })).filter(({ c }) => e.match.test(c.title));
@@ -75,7 +83,11 @@ for (const e of EXPECTED) {
   }
 
   const got = hits[0].c;
-  const shown = `${got.title}${got.due ? `  [${got.due}]` : "  [no date]"}`;
+  const stripped = [
+    ...got.removed.map((x) => `${x.field}="${x.value}" REMOVED`),
+    ...got.dropped.map((d) => `"${d}" LEFT UNUSED`),
+  ].join(", ");
+  const shown = `${got.title}${got.due ? `  [${got.due}]` : "  [no date]"}${stripped ? `  {${stripped}}` : ""}`;
   const problems: string[] = [];
 
   if (!dueOk(e.due, got.due)) {
@@ -86,8 +98,12 @@ for (const e of EXPECTED) {
   if (e.must && !e.must.test(got.title)) problems.push("DETAIL DROPPED");
   if (e.urgent !== undefined && got.urgent !== e.urgent) problems.push(`urgent=${got.urgent}`);
 
-  console.log(`  ${pad(label, 26)}${pad(shown, 44)}${problems.length ? problems.join(", ") : "ok"}`);
+  const verdict = problems.length ? problems.join(", ")
+    : got.removed.length || got.dropped.length ? "ok (service caught it)" : "ok";
+  console.log(`  ${pad(label, 26)}${pad(shown, 58)}${verdict}`);
   if (problems.length) faults.push(`${problems.join(", ")}: ${e.key} — ${e.why}`);
+  for (const x of got.removed) caught.push(`${e.key}: ${x.field}="${x.value}" removed — ${x.reason}`);
+  for (const d of got.dropped) caught.push(`${e.key}: "${d}" is in the item's own quote and the item never uses it`);
 }
 
 // Anything returned that matched no expected item.
@@ -98,7 +114,7 @@ created.forEach((c, i) => {
 });
 
 // --- the modification -------------------------------------------------------
-console.log(`  ${"─".repeat(96)}`);
+console.log(`  ${"─".repeat(110)}`);
 const headphonesInCreated = created.filter((c) => /headphone/i.test(c.title));
 const want = `MODIFY ${EXPECTED_MODIFY.id}`;
 
@@ -125,7 +141,7 @@ if (headphonesInCreated.length) {
 
 // --- totals -----------------------------------------------------------------
 const dues = created.map((c) => c.due).filter(Boolean);
-console.log(`  ${"─".repeat(96)}`);
+console.log(`  ${"─".repeat(110)}`);
 console.log(`  dates returned: ${dues.length} — ${JSON.stringify(dues)}   (he stated three)`);
 if (dues.length !== 3) faults.push(`DATE COUNT: ${dues.length}, not three. today (rent), this evening (tax), ten days (appeal).`);
 if (created.some((c) => /find (a )?physio/i.test(c.title))) faults.push('RETRACTION IGNORED: "find a physio" came back as an item after he said "No".');
@@ -133,6 +149,10 @@ if (created.some((c) => /find (a )?physio/i.test(c.title))) faults.push('RETRACT
 if (r.unparsed.length) { console.log(`\n  flagged by the model:`); r.unparsed.forEach((u) => console.log(`    ${JSON.stringify(u.text.slice(0, 72))}`)); }
 if (r.unaccounted.length) { console.log(`\n  quoted by nothing (service, not model):`); r.unaccounted.forEach((u) => console.log(`    ${JSON.stringify(u.slice(0, 72))}`)); }
 
-console.log(`\n  ${faults.length ? `${faults.length} FAULT(S):` : "no faults."}`);
+if (caught.length) {
+  console.log(`\n  ${caught.length} CLAIM(S) CAUGHT BY THE SERVICE (wrong entry turned into a missing one, §2.2):`);
+  caught.forEach((c, i) => console.log(`    ${i + 1}. ${c}`));
+}
+console.log(`\n  ${faults.length ? `${faults.length} FAULT(S) REACHING HIM:` : "no faults."}`);
 faults.forEach((f, i) => console.log(`    ${i + 1}. ${f}`));
 console.log();

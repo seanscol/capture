@@ -62,6 +62,50 @@ So the failures that remain are all the **visible** kind — they arrive in the
 confirm queue where he sees them before anything is written. That is not the
 same as the test passing, and the test still says so.
 
+## After the two structural guards (2026-09-04, later)
+
+Sean asked two questions the measurements above could not answer: what caused
+the dropped name, and whether an instruction the model ignores two times in
+three can be replaced by a check. Both turned into code.
+
+| | Coverage only | + grounding + dropped-name |
+|---|---|---|
+| Fully clean runs | 1 of 5 | **3 of 5** |
+| Invented dates reaching him | 2 of 3 runs | **none, in any run** |
+| Silent losses | none | none |
+
+**Every invented date is now caught and removed** — three per run, in all five
+runs, consistently: the "today" borrowed onto Westcott from the sentence
+before, and the "next week" carried onto both physio items across the
+retraction. They are removed rather than passed on, per §2.2 — a wrong entry
+is worse than a missing one — and each removal is reported so the removal is
+not itself a silent loss.
+
+**One failure remains: the cancellation is not parsed, in 2 of 5 runs.** It is
+reported as unaccounted for every time, in his own words. A miss he can see,
+not an error he cannot.
+
+### The three guards, and what each one alone cannot see
+
+They are not redundant. The dropped-name case slipped past two of them.
+
+| Guard | Catches | Blind to |
+|---|---|---|
+| `coverage.ts` | text no candidate quoted — a whole item lost | a lossy item whose quote is complete |
+| `grounding.ts` — `ungroundedFields` | a claim the candidate's own quote does not contain | a claim inside a quote wider than the model actually used |
+| `grounding.ts` — `droppedFromQuote` | a name sitting in the quote the item never uses | a lost detail that is not a name or a number |
+
+The rent item came back titled "Pay rent today" from a quote carrying the
+whole sentence including "in Megan". The quote was complete, so coverage saw
+no gap. The title claimed nothing unsupported, so grounding saw no invention.
+Only the third — a name in its own source that the item never uses — sees it.
+
+The one gap that remains, stated because a guard trusted further than it
+reaches is worse than none: when the model quotes a **wider** span than it
+actually used, a claim taken from inside that span looks supported. That is
+exactly how the GP item keeps "next week" in the runs where it quotes the
+retraction it was told to honour.
+
 ## The three failures that remain, and they are not equal
 
 Two of them are visible to Sean and one is not, which is the distinction that

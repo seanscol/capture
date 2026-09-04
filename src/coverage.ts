@@ -53,8 +53,55 @@ function normalise(text: string) {
 }
 
 /**
- * Stretches of `text` that none of `quotes` covers, each at least
- * `minChars` long, returned as they appear in the original.
+ * Is this leftover worth reporting even though it is short?
+ *
+ * The length threshold exists to filter "um" and "uh". It also filtered
+ * `"in Megan."` — nine characters naming the person the money is owed to,
+ * dropped from an item that then read "pay the rest of the rent" and looked
+ * complete. Measured in one run of three.
+ *
+ * Lowering the threshold is the wrong fix: it reports every "uh" and teaches
+ * him to skim the list. What separates "in Megan" from "um" is not length,
+ * it is that one carries a name and the other carries nothing. A capitalised
+ * word that does not open a sentence is a proper noun; a digit is a quantity.
+ * Neither can be reconstructed from context if it goes missing, which is what
+ * makes losing one worse than losing a filler word.
+ *
+ * Textual, not semantic: it asks whether a token looks like a name or a
+ * number, never what it means. Deciding what "Megan" refers to would be
+ * guessing at input (§2.2), which is the thing this exists to prevent.
+ */
+export function namedTokens(span: string, within = span, offset = 0): string[] {
+  const found: string[] = [];
+
+  for (const m of span.matchAll(/\d[\d,.]*|[A-Z][a-zA-Z'’-]+/g)) {
+    const word = m[0];
+    if (/^\d/.test(word)) { found.push(word); continue; }
+    if (word === "I") continue; // The pronoun, not a name.
+
+    // Sentence-initial capitals are grammar, not names. Look left in the
+    // surrounding text, past whitespace, for a sentence end or the start.
+    const at = offset + (m.index ?? 0);
+    let i = at - 1;
+    while (i >= 0 && /\s/.test(within[i])) i--;
+    if (i < 0 || /[.!?]/.test(within[i])) continue;
+
+    found.push(word);
+  }
+  return found;
+}
+
+function carriesSomethingNamed(gap: string, text: string, offset: number): boolean {
+  return namedTokens(gap, text, offset).length > 0;
+}
+
+/**
+ * Stretches of `text` that none of `quotes` covers, returned as they appear
+ * in the original.
+ *
+ * A leftover is reported when it is at least `minChars` long — long enough to
+ * have carried a whole item — or when it names something that cannot be
+ * reconstructed if lost, however short it is.
  */
 export function uncovered(text: string, quotes: string[], minChars = MIN_UNCOVERED_CHARS): string[] {
   const { out, map } = normalise(text);
@@ -79,8 +126,12 @@ export function uncovered(text: string, quotes: string[], minChars = MIN_UNCOVER
     const covered = i === out.length || seen[i];
     if (!covered && start === null) start = i;
     if (covered && start !== null) {
-      if (out.slice(start, i).trim().length >= minChars) {
-        gaps.push(text.slice(map[start], map[i - 1] + 1).trim());
+      const from = map[start];
+      const raw = text.slice(from, map[i - 1] + 1);
+      const trimmed = raw.trim();
+      const long = out.slice(start, i).trim().length >= minChars;
+      if (trimmed && (long || carriesSomethingNamed(raw, text, from))) {
+        gaps.push(trimmed);
       }
       start = null;
     }

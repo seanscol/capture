@@ -12,6 +12,19 @@ export type Candidate = {
   item: Record<string, unknown>;
   confidence: number;
   source_text: string;
+  /**
+   * Fields taken off the item because its own quote did not contain them —
+   * see src/grounding.ts. Reported rather than dropped quietly: removing
+   * something without saying so is the fault being guarded against.
+   */
+  removed?: { field: string; value: string; reason: string }[];
+  /**
+   * Names or numbers sitting in this candidate's own quote that the item
+   * never mentions — see droppedFromQuote in src/grounding.ts. Reported only:
+   * which field a lost name belonged in cannot be known from here, and
+   * putting it somewhere would be the guess this is watching for.
+   */
+  dropped?: string[];
 };
 
 export type Modification = {

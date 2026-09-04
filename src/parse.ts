@@ -9,6 +9,7 @@
  */
 import { SYSTEM, userMessage } from "./prompt.ts";
 import { uncovered } from "./coverage.ts";
+import { droppedFromQuote, ungroundedFields } from "./grounding.ts";
 import { validate } from "./schema.ts";
 import type { Candidate, Modification, ModelClient, ParseRequest, ParseResult, Unparsed } from "./types.ts";
 
@@ -56,6 +57,12 @@ export async function parse(
   }
 
   const haystack = norm(request.text);
+  const required = new Set(
+    Array.isArray((request.schema as Record<string, unknown>).required)
+      ? ((request.schema as Record<string, unknown>).required as unknown[]).filter(
+          (k): k is string => typeof k === "string")
+      : []
+  );
 
   /** Checks common to every candidate. Returns the problems, not a boolean. */
   function faults(c: Record<string, unknown>): string[] {
@@ -100,10 +107,34 @@ export async function parse(
       flag(raw, problems);
       continue;
     }
+    const item = raw.item as Record<string, unknown>;
+    const quote = raw.source_text as string;
+
+    // A claim the candidate's own quote cannot support is removed, not passed
+    // on: §2.2 — a wrong entry is worse than a missing one. Required fields
+    // stay, because removing one would make the item fail the caller's own
+    // schema; they are reported instead, and the caller decides.
+    const removed: NonNullable<Candidate["removed"]> = [];
+    for (const field of ungroundedFields(item, quote)) {
+      if (required.has(field)) continue;
+      removed.push({
+        field,
+        value: String(item[field]),
+        reason: "not in the words this candidate quoted",
+      });
+      delete item[field];
+    }
+
+    // Checked after the removals above, so a name that only appeared in a
+    // field this service just stripped is correctly reported as lost.
+    const dropped = droppedFromQuote(item, quote);
+
     created.push({
-      item: raw.item as Record<string, unknown>,
+      item,
       confidence: raw.confidence as number,
-      source_text: raw.source_text as string,
+      source_text: quote,
+      ...(removed.length ? { removed } : {}),
+      ...(dropped.length ? { dropped } : {}),
     });
   }
 

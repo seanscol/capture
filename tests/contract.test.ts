@@ -236,3 +236,136 @@ test("a fully quoted capture leaves nothing unaccounted for", async () => {
   );
   assert.deepEqual(r.unaccounted, [], "No false positives on a clean parse.");
 });
+
+// --- §2.2 structurally: a claim the quote cannot support ------------------
+
+test("a date the candidate's own quote does not contain is removed", async () => {
+  const r = await parse(
+    { text: "I need to pay rent today. I need to call Westcott.", schema: TASK_SCHEMA },
+    { model: stub({
+        created: [{ item: { title: "Call Westcott", due: "today" }, confidence: 0.95,
+                    source_text: "I need to call Westcott" }],
+        modified: [], unparsed: [],
+      }) }
+  );
+
+  assert.equal(r.created.length, 1, "The item stays. Only the unsupported claim goes.");
+  assert.equal(r.created[0].item.due, undefined,
+    'He said "today" about the rent, in the sentence before. The model carried ' +
+    "it one item too far — seen in two runs of three against the real " +
+    "dictation, with a quote containing no date at all. The prompt already " +
+    "forbids this in as many words; an instruction ignored two times in three " +
+    "is not a guard. §2.2 decides the direction: a wrong entry is worse than a " +
+    "missing one, so the claim becomes missing.");
+  assert.deepEqual(r.created[0].removed, [
+    { field: "due", value: "today", reason: "not in the words this candidate quoted" },
+  ], "Removed, and said so. Removing it quietly would be the same fault as the " +
+     "model dropping a payee quietly.");
+});
+
+test("a date the quote does contain is left alone", async () => {
+  const r = await parse(
+    { text: "I need to finish my tax return by this evening", schema: TASK_SCHEMA },
+    { model: stub({
+        created: [{ item: { title: "Finish my tax return", due: "this evening" }, confidence: 0.95,
+                    source_text: "I need to finish my tax return by this evening" }],
+        modified: [], unparsed: [],
+      }) }
+  );
+  assert.equal(r.created[0].item.due, "this evening", "No false positives on a grounded claim.");
+  assert.equal(r.created[0].removed, undefined);
+});
+
+test("a required field is never removed, only reported", async () => {
+  // Stripping a required field would make the item fail the caller's own
+  // schema. A caller wanting abstractive titles is entitled to them; that is
+  // their schema's business, not this service's (§10, generic).
+  const r = await parse(
+    { text: "pay the rest of the rent", schema: TASK_SCHEMA },
+    { model: stub({
+        created: [{ item: { title: "Rent payment" }, confidence: 0.9, source_text: "pay the rest of the rent" }],
+        modified: [], unparsed: [],
+      }) }
+  );
+  assert.equal(r.created.length, 1);
+  assert.equal(r.created[0].item.title, "Rent payment", "title is required by TASK_SCHEMA, so it stays.");
+});
+
+test("a name dropped from an item is reported even though it is short", async () => {
+  // The model truncated its own quote at the same point as the title, so the
+  // name it dropped left a nine-character gap — under the length threshold
+  // that filters "um" and "uh", and therefore invisible. Losing "in Megan"
+  // leaves "pay the rest of the rent" looking complete and owing nothing to
+  // anyone. §2.2: a wrong entry is worse than a missing one.
+  const text = "pay the rest of the rent that I didn't pay in Megan";
+  const r = await parse(
+    { text, schema: TASK_SCHEMA },
+    { model: stub({
+        created: [{ item: { title: "Pay the rest of the rent that I didn't pay" }, confidence: 0.95,
+                    source_text: "pay the rest of the rent that I didn't pay" }],
+        modified: [], unparsed: [],
+      }) }
+  );
+  assert.ok(r.unaccounted.some((u) => /megan/i.test(u)),
+    `"in Megan" went missing and nothing reported it.\n    unaccounted: ${JSON.stringify(r.unaccounted)}`);
+});
+
+test("filler is still not reported", async () => {
+  const text = "Um, I need to call Westcott. Uh, and then that's it";
+  const r = await parse(
+    { text, schema: TASK_SCHEMA },
+    { model: stub({
+        created: [{ item: { title: "Call Westcott" }, confidence: 0.95, source_text: "I need to call Westcott" }],
+        modified: [], unparsed: [],
+      }) }
+  );
+  assert.deepEqual(r.unaccounted.filter((u) => /^(um|uh|and then)\b/i.test(u.trim())), [],
+    "A checker that reports every 'uh' teaches him to skim the list that " +
+    "matters — §13.8's own test for a checker that is silent when correct.");
+});
+
+test("a name left unused inside a candidate's own quote is reported", async () => {
+  // The mirror of the check above, and the case neither of the other two
+  // catches. The quote carried the whole sentence, so coverage saw no gap;
+  // the title claimed nothing unsupported, so grounding saw no invention. The
+  // item just never used a name sitting in its own source, and read as
+  // finished while owing the money to nobody. Seen in one run of three.
+  const quote = "I need to pay rent today, um, or pay the rest of the rent that I didn't pay in Megan.";
+  const r = await parse(
+    { text: quote, schema: TASK_SCHEMA },
+    { model: stub({
+        created: [{ item: { title: "Pay rent today", due: "today" }, confidence: 0.95, source_text: quote }],
+        modified: [], unparsed: [],
+      }) }
+  );
+  assert.deepEqual(r.created[0].dropped, ["Megan"],
+    "§2.2 has two directions — never invent a detail, never delete one. This " +
+    "is the delete direction, per candidate.");
+});
+
+test("a candidate that uses the names in its quote reports nothing", async () => {
+  const quote = "I need to pay rent today, um, or pay the rest of the rent that I didn't pay in Megan.";
+  const r = await parse(
+    { text: quote, schema: TASK_SCHEMA },
+    { model: stub({
+        created: [{ item: { title: "Pay the rest of the rent that I didn't pay in Megan", due: "today" },
+                    confidence: 0.95, source_text: quote }],
+        modified: [], unparsed: [],
+      }) }
+  );
+  assert.equal(r.created[0].dropped, undefined, "No noise when nothing was lost.");
+});
+
+test("a sentence-opening capital is not mistaken for a name", async () => {
+  const quote = "Call the dentist. Then book a haircut.";
+  const r = await parse(
+    { text: quote, schema: TASK_SCHEMA },
+    { model: stub({
+        created: [{ item: { title: "Call the dentist" }, confidence: 0.9, source_text: quote }],
+        modified: [], unparsed: [],
+      }) }
+  );
+  assert.equal(r.created[0].dropped, undefined,
+    '"Call" and "Then" open sentences. Treating every capital as a name would ' +
+    "report one on almost every item, which is how a report stops being read.");
+});
