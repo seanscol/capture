@@ -1,0 +1,21 @@
+{
+  "name": "capture",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Stateless capture-parsing service. Text and a schema in, candidate items out. Stores nothing.",
+  "scripts": {
+    "test": "tsx --test tests/auth.test.ts tests/contract.test.ts tests/schema.test.ts && echo '\\n  NOT RUN: the acceptance test (tests/acceptance.test.ts). It calls the real\\n  model and costs money. Green above does not mean it passes. Run it with\\n  npm run test:acceptance\\n'",
+    "test:acceptance": "tsx --test tests/acceptance.test.ts",
+    "dev": "tsx src/server.ts",
+    "make-token": "node scripts/make-token.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.71.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "tsx": "^4.19.2",
+    "typescript": "^5"
+  }
+}
