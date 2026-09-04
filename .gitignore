@@ -1,6 +1,17 @@
 node_modules/
-.env.local
-.env
-.vercel/
 *.log
+
+# Secrets. .env.local holds the API key and the caller token; the Vercel CLI
+# also writes a VERCEL_OIDC_TOKEN into it on link.
+.env
+.env.local
+.env*.local
+
+# ...but the template that tells Sean which lines to fill in is tracked.
+!.env.local.example
+
+.vercel/
+
+# Written by the acceptance test so a run can be examined without paying for
+# another, different one.
 last-parse.json

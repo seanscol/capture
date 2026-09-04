@@ -2,6 +2,14 @@
 
 The stateless capture-parsing service — `SYSTEM.md` §10.
 
+**Live:** `https://capture-three-lyart.vercel.app/api/parse` — POST only, Bearer token required.
+
+**The acceptance test does not fully pass.** It was deployed anyway on
+2026-09-04, by Sean, after being shown what fails and how often
+(`MODEL-EVIDENCE.md`). Every remaining failure produces a candidate he sees in
+the confirm queue before anything is written; the one failure he could not
+see — an item vanishing silently — is caught in code by `src/coverage.ts`.
+
 Free text and a target schema go in over HTTP. Candidate structured items come
 out. **It stores nothing, writes to no app, and holds no credential for any
 app.** The calling app has already saved the raw words before it calls, so

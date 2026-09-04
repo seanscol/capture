@@ -19,7 +19,28 @@ only one observed to pass everything. Sonnet lost the payee in two runs of
 three and kept a task the speaker had cancelled out loud. Opus was
 *consistent* rather than accurate — the same three failures every run.
 
-**The acceptance test does not pass reliably. Nothing is deployed.**
+**The acceptance test does not pass reliably.**
+
+**Deployed anyway on 2026-09-04** to `https://capture-three-lyart.vercel.app`, on Sean's explicit decision
+after being shown these figures and the four rule breaks: *"deploy, um, all
+the rule breaks are all fine with me. I don't mind the latency at all. And
+given that I can review the way it's been passed, then I'm not too worried."*
+Recorded here because a deployment that happened despite a failing test must
+not later look like one that happened because the test passed (§7(j)).
+
+Verified live, not inferred (§7 practices): an unauthenticated POST returns
+**this service's** 401 — `content-type: application/json`, body
+`{"error":"Unauthorized."}` — not Vercel's Deployment Protection page, which
+returns 401 too and would have looked identical from the status code alone. A
+correct token returns 200 with a real parse, which is what proves protection
+is off rather than masking everything. The 401 body says "Unauthorized"
+rather than "not configured with a token", which is positive evidence that
+`CAPTURE_TOKEN` is set in production — read from the response, and confirmed
+against `vercel env ls`.
+
+A shorter, ordinary capture — one creation and one cancellation — returned in
+**2038ms**. The ~4.6s figure below is the six-item dictation, which is the
+hardest input this service has, not a typical one.
 
 ## After the coverage check
 

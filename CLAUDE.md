@@ -138,7 +138,14 @@ to no app, and holds no credential for any app.** The calling app has already
 saved the raw capture before it calls, so nothing here is on the path between
 Sean and his own words.
 
-- **Live:** not deployed yet · **Repo:** `github.com/seanscol/capture`
+- **Live:** `capture-three-lyart.vercel.app` · **Repo:** `github.com/seanscol/capture`
+- **Deployed 2026-09-04 with the acceptance test NOT fully passing**, on Sean's
+  explicit decision after being shown the measurements (§13.4). Do not let
+  this read as a green test later — it is not one, and §7(j) is the family
+  where documentation records a fix that was never made. `MODEL-EVIDENCE.md`
+  has the figures and the three remaining failures. What is deployed and what
+  is not is status: read `~/Projects/ecosystem/NEXT-STEPS.md`, never this
+  file.
 - **Stack:** TypeScript on Vercel, no framework. One endpoint. Deliberately
   frameworkless: §10 wants an answer "within a second or two" and a framework
   would spend that budget on cold starts before reading the request.
