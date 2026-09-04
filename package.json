@@ -8,7 +8,8 @@
     "test": "tsx --test tests/auth.test.ts tests/contract.test.ts tests/schema.test.ts && echo '\\n  NOT RUN: the acceptance test (tests/acceptance.test.ts). It calls the real\\n  model and costs money. Green above does not mean it passes. Run it with\\n  npm run test:acceptance\\n'",
     "test:acceptance": "tsx --test tests/acceptance.test.ts",
     "dev": "tsx src/server.ts",
-    "make-token": "node scripts/make-token.mjs"
+    "make-token": "node scripts/make-token.mjs",
+    "diff": "tsx scripts/diff-parse.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.0"
