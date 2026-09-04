@@ -22,7 +22,7 @@ const MAX_TOKENS = 4096;
 const TOOL_NAME = "emit";
 
 /** The caller's schema, nested inside the shape this service returns. */
-function wrap(schema: Record<string, unknown>) {
+export function wrap(schema: Record<string, unknown>) {
   const quoted = {
     confidence: { type: "number", description: "0 to 1. How sure you are this is what the speaker meant." },
     source_text: { type: "string", description: "Copied character for character from the capture." },
@@ -92,6 +92,12 @@ export function liveModel(model = process.env.CAPTURE_MODEL || DEFAULT_MODEL): M
       const reply = await client.messages.create({
         model,
         max_tokens: MAX_TOKENS,
+        // Haiku 4.5 rejects output_config.effort; the larger models take it,
+        // and on Opus thinking is on by default, which this parse does not
+        // need and would pay for in latency. Low effort keeps the escalation
+        // rungs comparable on speed instead of comparing a thinking model
+        // against a non-thinking one and calling the difference capability.
+        ...(model.startsWith("claude-haiku") ? {} : { output_config: { effort: "low" as const } }),
         system: request.system,
         messages: [{ role: "user", content: request.user }],
         tools: [

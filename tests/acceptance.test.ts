@@ -10,6 +10,7 @@
  */
 import { test, before } from "node:test";
 import assert from "node:assert/strict";
+import { writeFileSync } from "node:fs";
 import { loadEnvLocal } from "../src/env.ts";
 import { parse } from "../src/parse.ts";
 import { liveModel } from "../src/model.ts";
@@ -17,12 +18,36 @@ import { DICTATION, TASK_SCHEMA, EXISTING } from "./fixtures/dictation.ts";
 import type { ParseResult } from "../src/types.ts";
 
 /**
- * A generous ceiling, not a target. §10 wants "within a second or two";
- * bug family (e) is "correct but too slow to be an answer" — a parse he
- * cannot check while he still remembers what he said is a wrong entry.
- * PLACEHOLDER (§5.7): unproven against a cold Vercel function.
+ * Two different numbers, because they answer two different questions.
+ *
+ * TARGET is what §10 asks for: "The parse returns within a second or two".
+ * CEILING is a regression alarm — the point at which something has changed
+ * for the worse, not the point at which it is good.
+ *
+ * They are separate because measurement says the target is not currently met,
+ * and collapsing them would mean choosing between a permanently red test and
+ * a ceiling quietly raised until it passed. The first trains everyone to
+ * ignore the suite (§13.8's own test for a checker); the second is how a
+ * requirement disappears without anyone deciding to drop it.
+ *
+ * Measured on claude-haiku-4-5, `scripts/latency-probe.mts`, 2026-09-04:
+ *
+ *     connection + queue   1293 ms   (before a single token arrives)
+ *     generating           2394 ms   (556 output tokens at 232 tok/sec)
+ *     TOTAL                3689 ms
+ *
+ * So it is output-bound, and the output is mostly irreducible: six items with
+ * a title, a deadline and a confidence each. Quotes and reasons together are
+ * under a third of it, and they are what makes the parse checkable at all
+ * (§2.2). There is no faster model — Haiku is the smallest, and the larger
+ * ones generate more slowly.
+ *
+ * PLACEHOLDER (§5.7), and a live question for the planning chat, not
+ * something this file decided: whether ~4s meets §10's intent, or whether the
+ * calling app should stream so the first candidate lands in about 1.5s.
  */
-const LATENCY_CEILING_MS = 4000;
+const LATENCY_TARGET_MS = 2000;
+const LATENCY_CEILING_MS = 6000;
 
 let result: ParseResult;
 
@@ -40,7 +65,10 @@ before(async () => {
     { model: liveModel() }
   );
   console.log(`\n  model: ${result.model}   elapsed: ${result.elapsed_ms}ms`);
-  console.log(`  ${JSON.stringify(result, null, 2).split("\n").join("\n  ")}\n`);
+  // The parse is non-deterministic, so a run that is only summarised cannot be
+  // examined afterwards without paying for another, different one.
+  writeFileSync("last-parse.json", JSON.stringify(result, null, 2));
+  console.log(`  full parse written to last-parse.json\n`);
 });
 
 // --- helpers ---------------------------------------------------------------
@@ -107,8 +135,13 @@ test("the appeal is ONE task, not two", () => {
 });
 
 test("the GP referral and the Bupa call are both present", () => {
-  only(/gp|refer/i, 'He said "contact my GP to get them to refer me to the physio".');
-  only(/bupa|mom|mum/i, 'He said "get my mom to call Bupa to confirm the referral".');
+  // These two patterns must not overlap. The first version matched /gp|refer/
+  // for the GP task, which also matched "Get my mom to call Bupa to confirm
+  // the REFERral" — so "exactly one" found two and the test failed on a
+  // correct parse. Bug family (c): the instrument sharing the assumption,
+  // in the test written to check it. Match on what is unique to each.
+  only(/\bGP\b/i, 'He said "contact my GP to get them to refer me to the physio".');
+  only(/bupa/i, 'He said "get my mom to call Bupa to confirm the referral".');
 });
 
 // --- the retraction --------------------------------------------------------
@@ -200,8 +233,21 @@ test("nothing is silently dropped", () => {
 // --- speed (bug family (e)) ------------------------------------------------
 
 test("it answers fast enough to be checked while he remembers", () => {
+  // Said out loud on every run that misses it, so the gap stays visible
+  // instead of living only in a comment nobody opens. Absence of a complaint
+  // would be absence of data read as good news (§2.1).
+  if (result.elapsed_ms > LATENCY_TARGET_MS) {
+    console.log(
+      `\n  NOT MEETING §10: ${result.elapsed_ms}ms against a stated target of ` +
+      `"a second or two" (${LATENCY_TARGET_MS}ms).\n` +
+      `  Below the ${LATENCY_CEILING_MS}ms regression alarm, so this test is ` +
+      `green — green here means "no worse", not "fast enough".\n` +
+      `  Open for decision: accept it, or stream from the calling app.\n`
+    );
+  }
+
   assert.ok(result.elapsed_ms < LATENCY_CEILING_MS,
-    `${result.elapsed_ms}ms exceeds the ${LATENCY_CEILING_MS}ms ceiling.\n` +
+    `${result.elapsed_ms}ms exceeds the ${LATENCY_CEILING_MS}ms regression alarm.\n` +
     '    Bug family (e): correct but too slow to be an answer. assessRisk hit ' +
     '5.3s and every test passed, because they assert answers, not that ' +
     'answers arrive. This one asserts that it arrives.');
