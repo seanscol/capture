@@ -21,57 +21,89 @@ const MAX_TOKENS = 4096;
 
 const TOOL_NAME = "emit";
 
+/**
+ * Does this schema satisfy strict tool use?
+ *
+ * Strict requires `additionalProperties: false` on every object. The caller's
+ * schema is nested inside ours as `item`, and the caller wrote it, so it may
+ * not comply — and a 400 for a schema this service does not control is the
+ * caller being punished for our choice. Checked here instead, and strict is
+ * simply not requested when it cannot be satisfied.
+ */
+export function strictCompatible(schema: unknown): boolean {
+  if (Array.isArray(schema)) return schema.every(strictCompatible);
+  if (typeof schema !== "object" || schema === null) return true;
+
+  const s = schema as Record<string, unknown>;
+  const isObjectType = s.type === "object" ||
+    (Array.isArray(s.type) && (s.type as unknown[]).includes("object"));
+  if (isObjectType && s.additionalProperties !== false) return false;
+
+  return Object.values(s).every(strictCompatible);
+}
+
 /** The caller's schema, nested inside the shape this service returns. */
 export function wrap(schema: Record<string, unknown>) {
   const quoted = {
     confidence: { type: "number", description: "0 to 1. How sure you are this is what the speaker meant." },
     source_text: { type: "string", description: "Copied character for character from the capture." },
   };
-  return {
+  const object = (required: string[], properties: Record<string, unknown>) => ({
     type: "object",
-    required: ["created", "modified", "unparsed"],
-    properties: {
-      created: {
-        type: "array",
-        items: {
-          type: "object",
-          required: ["item", "confidence", "source_text"],
-          properties: { item: schema, ...quoted },
-        },
-      },
-      modified: {
-        type: "array",
-        items: {
-          type: "object",
-          required: ["target", "intent", "confidence", "source_text"],
-          properties: {
-            target: {
-              type: "object",
-              required: ["id", "described_as"],
-              properties: {
-                id: { type: ["string", "null"], description: "An id from the supplied records, or null if you are not sure which one." },
-                described_as: { type: "string", description: "The speaker's own words for the record." },
-              },
-            },
-            intent: { type: "string", description: "What to do to it, in the speaker's words." },
-            change: { type: "object", description: "Fields to change, if the schema expresses them." },
-            ...quoted,
-          },
-        },
-      },
-      unparsed: {
-        type: "array",
-        items: {
-          type: "object",
-          required: ["text", "reason"],
-          properties: {
-            text: { type: "string", description: "The speaker's words, verbatim." },
-            reason: { type: "string", description: "Why it could not be mapped." },
-          },
-        },
-      },
+    // Required by strict tool use, and harmless without it.
+    additionalProperties: false,
+    required,
+    properties,
+  });
+
+  return object(["created", "modified", "unparsed"], {
+    created: {
+      type: "array",
+      items: object(["item", "confidence", "source_text"], { item: schema, ...quoted }),
     },
-  };
+    modified: {
+      type: "array",
+      items: object(["target", "intent", "confidence", "source_text"], {
+        target: object(["id", "described_as"], {
+          id: { type: ["string", "null"], description: "An id from the supplied records, or null if you are not sure which one." },
+          described_as: { type: "string", description: "The speaker's own words for the record." },
+        }),
+        intent: { type: "string", description: "What to do to it, in the speaker's words." },
+        ...quoted,
+      }),
+    },
+    unparsed: {
+      type: "array",
+      items: object(["text", "reason"], {
+        text: { type: "string", description: "The speaker's words, verbatim." },
+        reason: { type: "string", description: "Why it could not be mapped." },
+      }),
+    },
+  });
+}
+
+/**
+ * Per-model-family request parameters. The two families take opposite knobs.
+ *
+ * Haiku 4.5 and earlier accept `temperature`. **This is set to 0**, and it was
+ * the largest single source of wrong answers here — not a subtle one. The API
+ * default is 1.0, so every parse was sampled at full randomness and the same
+ * paragraph produced a different reading of the same sentence from one call to
+ * the next. Measured after setting it: item count, titles and dates are
+ * identical across consecutive calls, where before they were not.
+ *
+ * Temperature 0 is greedy decoding, not a determinism guarantee — batching and
+ * floating point still let identical inputs differ. Treat repeated identical
+ * output as strong evidence, never proof (§2.1: measured, not assumed).
+ *
+ * The 4.6+ models removed sampling parameters and return 400 if sent one; they
+ * take `output_config.effort` instead, and on Opus thinking is on by default,
+ * which this parse does not need and would pay for in latency.
+ */
+function samplingFor(model: string) {
+  return model.startsWith("claude-haiku")
+    ? { temperature: 0 }
+    : { output_config: { effort: "low" as const } };
 }
 
 export function liveModel(model = process.env.CAPTURE_MODEL || DEFAULT_MODEL): ModelClient {
@@ -92,12 +124,7 @@ export function liveModel(model = process.env.CAPTURE_MODEL || DEFAULT_MODEL): M
       const reply = await client.messages.create({
         model,
         max_tokens: MAX_TOKENS,
-        // Haiku 4.5 rejects output_config.effort; the larger models take it,
-        // and on Opus thinking is on by default, which this parse does not
-        // need and would pay for in latency. Low effort keeps the escalation
-        // rungs comparable on speed instead of comparing a thinking model
-        // against a non-thinking one and calling the difference capability.
-        ...(model.startsWith("claude-haiku") ? {} : { output_config: { effort: "low" as const } }),
+        ...samplingFor(model),
         system: request.system,
         messages: [{ role: "user", content: request.user }],
         tools: [
@@ -105,6 +132,13 @@ export function liveModel(model = process.env.CAPTURE_MODEL || DEFAULT_MODEL): M
             name: TOOL_NAME,
             description: "Return the candidate items found in the capture.",
             input_schema: wrap(request.schema) as Anthropic.Tool["input_schema"],
+            // Without this, `required` on the schema above is a suggestion.
+            // Measured: the model omitted the whole `modified` key in one call
+            // of three at temperature 0 — which is not "no changes", it is not
+            // answering, and the two are indistinguishable downstream (§2.1).
+            // Only requested when the caller's own schema can satisfy strict;
+            // otherwise a 400 would punish the caller for our choice.
+            ...(strictCompatible(request.schema) ? { strict: true } : {}),
           },
         ],
         // Forced tool use. Supported on Haiku 4.5, Sonnet 5 and Opus 5 — the

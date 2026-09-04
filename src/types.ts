@@ -37,7 +37,6 @@ export type Modification = {
    */
   target: { id: string | null; described_as: string };
   intent: string;
-  change?: Record<string, unknown>;
   confidence: number;
   source_text: string;
 };

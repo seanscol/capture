@@ -164,7 +164,6 @@ export async function parse(
     modified.push({
       target: { id, described_as: describedAs },
       intent: raw.intent as string,
-      ...(isObject(raw.change) ? { change: raw.change } : {}),
       confidence: raw.confidence as number,
       source_text: raw.source_text as string,
     });

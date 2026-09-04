@@ -106,6 +106,53 @@ actually used, a claim taken from inside that span looks supported. That is
 exactly how the GP item keeps "next week" in the runs where it quotes the
 retraction it was told to honour.
 
+## It was a coin flip, and it was mine (2026-09-04, later still)
+
+Sean asked whether the remaining variance was sampling or a behaviour firing
+inconsistently. It was sampling, and it had been switched on the whole time:
+**`temperature` was never set, so every parse ran at the API default of 1.0** —
+full randomness. The same paragraph was getting a different reading of the
+same sentence from one call to the next, and no amount of prompt work would
+ever have fixed that.
+
+Two changes, both enforced rather than requested:
+
+**`temperature: 0`.** Measured directly with three consecutive identical
+calls: item count, titles and dates became identical where they had not been.
+
+**`strict: true` on the tool.** Temperature alone was not enough, and the way
+it failed is worth recording. In one call of three the model **omitted the
+`modified` key entirely** — not an empty list, the field absent. Without
+strict, `required` in a tool schema is a suggestion. And a missing field is
+not "no changes": it is not answering, and downstream the two are
+indistinguishable (§2.1). Strict needs `additionalProperties: false` on every
+object, so the wrapper sets it and the caller's own schema is checked first —
+strict is not requested when the caller's schema cannot satisfy it, because a
+400 for a schema this service does not control would punish the caller for our
+choice. The free-form `change` field was dropped to make the shape strict-able;
+`intent` carries the same thing in Sean's own words.
+
+### Ten runs, same input
+
+| | |
+|---|---|
+| Assertions passed | **9 of 10 runs clean** |
+| **Parse correct** | **10 of 10** |
+| Distinct decision-sets | **1** — identical titles, dates and modify target every run |
+| `modified` present | 10 of 10 (was absent in 1 of 3 before strict) |
+
+The single failing run failed on **latency**: 9855ms against the 6000ms
+regression alarm, on the first run of the batch. Not reproduced — the other
+nine ranged 3417–5356ms, and the first runs of two earlier batches were 4469ms
+and 5251ms, so it is not a cold-start pattern. It is the occasional slow
+upstream call that §10's fallback exists for: "If the service is slow or down,
+the raw is safe and the app falls back to its existing parser and says so."
+
+**No parse error in ten runs.** Every earlier failure — the borrowed date, the
+carried "next week", the vanished cancellation, the dropped name — is gone,
+and the three structural guards still sit behind them for the cases the model
+has not been shown yet.
+
 ## The three failures that remain, and they are not equal
 
 Two of them are visible to Sean and one is not, which is the distinction that
