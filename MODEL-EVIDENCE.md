@@ -21,6 +21,26 @@ three and kept a task the speaker had cancelled out loud. Opus was
 
 **The acceptance test does not pass reliably. Nothing is deployed.**
 
+## After the coverage check
+
+`src/coverage.ts` was added to catch failure 3 below in code rather than by
+asking the model more nicely. Re-measured over five runs on Haiku, against a
+test that now has one more assertion in it:
+
+| | |
+|---|---|
+| Fully clean runs | 1 of 5 |
+| **Silent-loss failures** | **0 of 5** |
+| Typical latency | ~4.6s |
+
+The model still dropped the cancellation instruction in one of those runs.
+The difference is that it now comes back in `unaccounted`, in Sean's own
+words, instead of not coming back at all.
+
+So the failures that remain are all the **visible** kind — they arrive in the
+confirm queue where he sees them before anything is written. That is not the
+same as the test passing, and the test still says so.
+
 ## The three failures that remain, and they are not equal
 
 Two of them are visible to Sean and one is not, which is the distinction that

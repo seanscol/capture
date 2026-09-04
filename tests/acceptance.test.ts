@@ -196,6 +196,27 @@ test("cancelling the headphones task is a MODIFY, never a CREATE", () => {
     'creations and mutations in different lists so this cannot pass silently.');
 });
 
+test("nothing he said goes missing without a trace", () => {
+  // The strict test above says the cancellation must be a MODIFY naming
+  // t-101. This one is weaker on purpose and matters more: whatever the model
+  // does with that sentence, it must not vanish. Measured before the coverage
+  // check existed, it vanished in two runs of five — not created, not
+  // modified, not flagged. A wrong candidate lands in the confirm queue where
+  // he can fix it; one that never arrives appears nowhere, and its absence
+  // reads as "he didn't say that" (§2.1, bug family (a)).
+  const quoted = [...result.created, ...result.modified].map((c) => norm(c.source_text));
+  const flagged = [...result.unparsed.map((u) => u.text), ...result.unaccounted].map(norm);
+  const headphones = "cancel the task about getting headphones";
+
+  const somewhere = [...quoted, ...flagged].some((s) => s.includes(headphones));
+  assert.ok(somewhere,
+    "The instruction to cancel the headphones item is nowhere: not quoted by " +
+    "a candidate, not flagged by the model, and not reported as unaccounted " +
+    "for. It has been lost silently, which is the one failure he cannot see.\n" +
+    `    unparsed: ${JSON.stringify(result.unparsed)}\n` +
+    `    unaccounted: ${JSON.stringify(result.unaccounted)}`);
+});
+
 // --- what makes the answer checkable (§2.1, §2.2) -------------------------
 
 test("every candidate quotes the words it came from", () => {

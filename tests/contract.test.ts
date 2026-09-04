@@ -185,3 +185,54 @@ test("a model that throws becomes a clean failure the caller can fall back from"
     "Upstream error text is not echoed to the caller: it is the one place an " +
     "API key or account detail could surface in a response body.");
 });
+
+// --- §2.1 applied to the parts, not just the whole ------------------------
+
+test("a sentence no candidate quoted is reported, not silently absent", async () => {
+  const text = "Call the dentist. And you can cancel the task about getting headphones.";
+  const r = await parse(
+    { text, schema: TASK_SCHEMA, existing: EXISTING },
+    { model: stub({
+        created: [{ item: { title: "Call the dentist" }, confidence: 0.9, source_text: "Call the dentist" }],
+        modified: [],
+        unparsed: [],
+      }) }
+  );
+
+  assert.equal(r.created.length, 1);
+  assert.equal(r.unaccounted.length, 1,
+    "The cancellation instruction was dropped by the model — not created, not " +
+    "modified, not flagged. Measured in two runs of five against the real " +
+    "dictation. The other failures land in the confirm queue where he sees " +
+    "them; an item that never arrives appears nowhere, and its absence reads " +
+    "as 'he didn't say that'. §2.1, bug family (a).");
+  assert.match(r.unaccounted[0], /headphones/,
+    "It comes back in his own words, so he can see what went missing.");
+});
+
+test("what is unaccounted for is not called unparsed", async () => {
+  const text = "Call the dentist. And you can cancel the task about getting headphones.";
+  const r = await parse(
+    { text, schema: TASK_SCHEMA },
+    { model: stub({
+        created: [{ item: { title: "Call the dentist" }, confidence: 0.9, source_text: "Call the dentist" }],
+        modified: [], unparsed: [],
+      }) }
+  );
+  assert.equal(r.unparsed.length, 0,
+    "`unparsed` is the model saying it could not read something. This is the " +
+    "service saying nothing cited it. A restatement quoted once lands here " +
+    "too, and calling that 'unparseable' would be a claim neither the model " +
+    "nor the service can support.");
+});
+
+test("a fully quoted capture leaves nothing unaccounted for", async () => {
+  const r = await parse(
+    { text: "Call the dentist", schema: TASK_SCHEMA },
+    { model: stub({
+        created: [{ item: { title: "Call the dentist" }, confidence: 0.9, source_text: "Call the dentist" }],
+        modified: [], unparsed: [],
+      }) }
+  );
+  assert.deepEqual(r.unaccounted, [], "No false positives on a clean parse.");
+});

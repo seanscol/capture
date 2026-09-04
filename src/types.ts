@@ -37,7 +37,19 @@ export type ParseResult = {
   model: string;
   created: Candidate[];
   modified: Modification[];
+  /** The model said it could not map these (§2.2). Its claim, in its words. */
   unparsed: Unparsed[];
+  /**
+   * Stretches of the capture that no candidate quoted. Computed here, not
+   * claimed by the model — see src/coverage.ts.
+   *
+   * A weaker statement than `unparsed`, and deliberately so: it says only
+   * that nothing cited these words, never that they were misunderstood or
+   * lost. A restatement the model quoted once will show up here, and so will
+   * an instruction it dropped altogether. The caller cannot tell those apart
+   * either — but it can show them, and Sean can, which is the whole point.
+   */
+  unaccounted: string[];
   elapsed_ms: number;
 };
 

@@ -8,6 +8,7 @@
  * fragment, never a plausible-looking item (§2.2).
  */
 import { SYSTEM, userMessage } from "./prompt.ts";
+import { uncovered } from "./coverage.ts";
 import { validate } from "./schema.ts";
 import type { Candidate, Modification, ModelClient, ParseRequest, ParseResult, Unparsed } from "./types.ts";
 
@@ -32,6 +33,7 @@ export async function parse(
   const created: Candidate[] = [];
   const modified: Modification[] = [];
   const unparsed: Unparsed[] = [];
+  let unaccounted: string[] = [];
 
   const verbatim = (reason: string) => {
     unparsed.push({ text: request.text, reason });
@@ -43,6 +45,7 @@ export async function parse(
     created,
     modified,
     unparsed,
+    unaccounted,
     elapsed_ms: Date.now() - started,
   });
 
@@ -152,6 +155,17 @@ export async function parse(
   if (!created.length && !modified.length && !unparsed.length && request.text.trim()) {
     return verbatim("nothing in the capture could be mapped to the schema");
   }
+
+  // The same rule applied to the parts rather than the whole. A model that
+  // silently drops one sentence produces a result that looks complete, and
+  // nothing downstream can tell that something is missing — so the service
+  // checks rather than trusting. Measured: the cancellation instruction
+  // vanished entirely in two runs of five.
+  unaccounted = uncovered(request.text, [
+    ...created.map((c) => c.source_text),
+    ...modified.map((m) => m.source_text),
+    ...unparsed.map((u) => u.text),
+  ]);
 
   return done();
 }
