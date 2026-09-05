@@ -199,6 +199,33 @@ A separate finding from the same session, worth keeping: `type: ["string",
 union open. The id is a plain string now, empty meaning "not sure", converted
 back to null immediately. Do not tidy it into a union.
 
+## The grounding guard was one case and had to be two (2026-09-05)
+
+It stripped any field whose words were not in its own candidate's quote. That
+caught a real borrowing and created a real falsehood, and the two look
+identical from inside a single candidate.
+
+**Borrowed.** "Call Westcott" came back with `due: "today"`, quoting a span
+with no date in it. He said "today" about the rent, in the sentence before,
+and the rent item quoted it. Stripping is right.
+
+**Orphan.** Four items came back with `due: "Monday"` stripped and the calling
+app reporting "you didn't say it in those words". He had said, in those words:
+*"a time scale spare room needs to be done I would say on Monday"* — a timing
+sentence covering things named earlier, which no item quoted. He dictates that
+way routinely. The guard threw away deadlines he had given **and** told him he
+had not given them.
+
+The difference is visible without guessing, but only from outside a single
+candidate: **a value another candidate quotes was taken from that candidate; a
+value nobody quotes was taken from nowhere.** So grounding now runs as a second
+pass with every quote in hand, and reports four origins rather than two —
+grounded, borrowed, orphan, invented — with borrowed and invented stripped
+under §2.2 and orphan kept and flagged, each with a reason that is true.
+
+Both suites, three runs each after the change: dictation 1 clean 3 of 3,
+dictation 2 clean 3 of 3.
+
 ## The three failures that remain, and they are not equal
 
 Two of them are visible to Sean and one is not, which is the distinction that

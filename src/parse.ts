@@ -9,7 +9,7 @@
  */
 import { SYSTEM, userMessage } from "./prompt.ts";
 import { uncovered } from "./coverage.ts";
-import { droppedFromQuote, ungroundedFields } from "./grounding.ts";
+import { droppedFromQuote, fieldOrigins } from "./grounding.ts";
 import { sharesAWord } from "./similarity.ts";
 import { validate } from "./schema.ts";
 import type { Candidate, Modification, ModelClient, ParseRequest, ParseResult, Unparsed } from "./types.ts";
@@ -33,6 +33,7 @@ export async function parse(
   });
 
   const created: Candidate[] = [];
+  const pending: { item: Record<string, unknown>; confidence: number; quote: string }[] = [];
   const modified: Modification[] = [];
   const unparsed: Unparsed[] = [];
   let unaccounted: string[] = [];
@@ -108,34 +109,13 @@ export async function parse(
       flag(raw, problems);
       continue;
     }
-    const item = raw.item as Record<string, unknown>;
-    const quote = raw.source_text as string;
-
-    // A claim the candidate's own quote cannot support is removed, not passed
-    // on: §2.2 — a wrong entry is worse than a missing one. Required fields
-    // stay, because removing one would make the item fail the caller's own
-    // schema; they are reported instead, and the caller decides.
-    const removed: NonNullable<Candidate["removed"]> = [];
-    for (const field of ungroundedFields(item, quote)) {
-      if (required.has(field)) continue;
-      removed.push({
-        field,
-        value: String(item[field]),
-        reason: "not in the words this candidate quoted",
-      });
-      delete item[field];
-    }
-
-    // Checked after the removals above, so a name that only appeared in a
-    // field this service just stripped is correctly reported as lost.
-    const dropped = droppedFromQuote(item, quote);
-
-    created.push({
-      item,
+    // Held rather than finished. Deciding whether a field was taken from
+    // another item or from nowhere needs every candidate's quote, and the
+    // modifications have not been read yet.
+    pending.push({
+      item: raw.item as Record<string, unknown>,
       confidence: raw.confidence as number,
-      source_text: quote,
-      ...(removed.length ? { removed } : {}),
-      ...(dropped.length ? { dropped } : {}),
+      quote: raw.source_text as string,
     });
   }
 
@@ -210,6 +190,61 @@ export async function parse(
       ...(lost.length ? { dropped: lost } : {}),
     });
   }
+
+  // --- second pass: where did each field's value actually come from? ------
+  //
+  // Only possible here, with every quote in hand. A value another candidate
+  // quotes was taken from that candidate; a value nobody quotes was taken
+  // from nowhere and belongs to no one item — see fieldOrigin.
+  const quotes = [...pending.map((p) => p.quote), ...modified.map((m) => m.source_text)];
+
+  pending.forEach((p, index) => {
+    const others = quotes.filter((_, j) => j !== index);
+    const removed: NonNullable<Candidate["removed"]> = [];
+    const unverified: NonNullable<Candidate["unverified"]> = [];
+
+    for (const { field, value, origin } of fieldOrigins(p.item, p.quote, others, request.text)) {
+      // Required fields are left entirely alone: removing one would make the
+      // item fail the caller's own schema, and a caller entitled to
+      // abstractive titles should not be second-guessed about them (§10).
+      if (origin === "grounded" || required.has(field)) continue;
+
+      if (origin === "orphan") {
+        // He said it. Nothing else claimed it. Throwing it away loses a real
+        // deadline, and saying "you didn't say that" about words he did say
+        // is worse than either — so it stays, and it says what it is.
+        unverified.push({
+          field,
+          value,
+          reason: "said in the capture, but not in the words this item quoted",
+        });
+        continue;
+      }
+
+      // invented or borrowed: §2.2, a wrong entry is worse than a missing one.
+      removed.push({
+        field,
+        value,
+        reason: origin === "borrowed"
+          ? "said about something else in the capture"
+          : "not said anywhere in the capture",
+      });
+      delete p.item[field];
+    }
+
+    // After the removals, so a name that only appeared in a field this
+    // service just stripped is correctly reported as lost.
+    const dropped = droppedFromQuote(p.item, p.quote);
+
+    created.push({
+      item: p.item,
+      confidence: p.confidence,
+      source_text: p.quote,
+      ...(removed.length ? { removed } : {}),
+      ...(unverified.length ? { unverified } : {}),
+      ...(dropped.length ? { dropped } : {}),
+    });
+  });
 
   for (const raw of Array.isArray(reply.json.unparsed) ? reply.json.unparsed : []) {
     if (!isObject(raw)) continue;

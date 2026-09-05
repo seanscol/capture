@@ -31,25 +31,73 @@ import { namedTokens } from "./coverage.ts";
 const words = (s: string): string[] =>
   s.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
 
+const containsAll = (haystack: string, value: string): boolean => {
+  const have = new Set(words(haystack));
+  const claimed = words(value);
+  // Every word, not most: a date is two or three words and a majority rule
+  // would pass "next Tuesday" against a quote containing only "next".
+  return claimed.length > 0 && claimed.every((w) => have.has(w));
+};
+
 /**
- * Field names whose value claims words the quote does not contain.
+ * Where a field's value came from, relative to what was actually said.
+ *
+ *   grounded  — it is in this candidate's own quote. Nothing to say.
+ *   invented  — it is nowhere in the capture at all.
+ *   borrowed  — it is in the capture, and another candidate's quote has it
+ *               too. It belongs to that one, and this one took it.
+ *   orphan    — it is in the capture but in no candidate's quote. Nobody
+ *               claimed those words, so nothing was taken from anywhere.
+ *
+ * The last two were one case until 2026-09-05 and had to be split, because
+ * they need opposite treatment and the single message was false half the time.
+ *
+ *   Borrowed, real: "call Westcott" came back with `due: "today"`, quoting a
+ *   span with no date in it. He said "today" about the rent, in the sentence
+ *   before, and the rent item quoted it. Stripping that is right.
+ *
+ *   Orphan, real: four items came back with `due: "Monday"` removed and the
+ *   reason "you didn't say it in those words". He had said, in as many words,
+ *   "a time scale spare room needs to be done I would say on Monday" — a
+ *   timing sentence covering things named earlier, which no item quoted. He
+ *   dictates that way routinely, so stripping it threw away deadlines he had
+ *   actually given AND told him he had not given them.
+ *
+ * The difference is visible from here without guessing: a value another
+ * candidate quotes was taken from that candidate; a value nobody quotes was
+ * taken from nowhere.
+ */
+export type FieldOrigin = "grounded" | "invented" | "borrowed" | "orphan";
+
+export function fieldOrigin(
+  value: string,
+  ownQuote: string,
+  otherQuotes: string[],
+  capture: string
+): FieldOrigin {
+  if (containsAll(ownQuote, value)) return "grounded";
+  if (!containsAll(capture, value)) return "invented";
+  return otherQuotes.some((q) => containsAll(q, value)) ? "borrowed" : "orphan";
+}
+
+/**
+ * Every string field of an item, with where its value came from.
  *
  * Only string values. A boolean cannot be traced to a phrase — `urgent: true`
  * says nothing about which words produced it — so this stays quiet rather
  * than inventing a rule it cannot apply (§2.1: silence here means not
  * checked, never verified).
  */
-export function ungroundedFields(item: Record<string, unknown>, quote: string): string[] {
-  const have = new Set(words(quote));
-  const out: string[] = [];
-
+export function fieldOrigins(
+  item: Record<string, unknown>,
+  ownQuote: string,
+  otherQuotes: string[],
+  capture: string
+): { field: string; value: string; origin: FieldOrigin }[] {
+  const out: { field: string; value: string; origin: FieldOrigin }[] = [];
   for (const [field, value] of Object.entries(item)) {
-    if (typeof value !== "string") continue;
-    const claimed = words(value);
-    if (!claimed.length) continue;
-    // Every word, not most: a date is two or three words and a majority rule
-    // would pass "next Tuesday" against a quote containing only "next".
-    if (!claimed.every((w) => have.has(w))) out.push(field);
+    if (typeof value !== "string" || !words(value).length) continue;
+    out.push({ field, value, origin: fieldOrigin(value, ownQuote, otherQuotes, capture) });
   }
   return out;
 }

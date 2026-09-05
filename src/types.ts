@@ -19,6 +19,18 @@ export type Candidate = {
    */
   removed?: { field: string; value: string; reason: string }[];
   /**
+   * Fields KEPT whose attachment to this item could not be verified: the
+   * value was said in the capture, but not in the words this item quoted and
+   * not in any other item's either. A timing sentence covering several things
+   * named earlier lands here.
+   *
+   * Separate from `removed` because the honest answer differs. A borrowed
+   * value belongs to another item and goes; an orphan belongs to nothing and
+   * stays, flagged, because throwing it away loses something he did say —
+   * and telling him he never said it is worse than either.
+   */
+  unverified?: { field: string; value: string; reason: string }[];
+  /**
    * Names or numbers sitting in this candidate's own quote that the item
    * never mentions — see droppedFromQuote in src/grounding.ts. Reported only:
    * which field a lost name belonged in cannot be known from here, and

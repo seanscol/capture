@@ -239,28 +239,99 @@ test("a fully quoted capture leaves nothing unaccounted for", async () => {
 
 // --- §2.2 structurally: a claim the quote cannot support ------------------
 
-test("a date the candidate's own quote does not contain is removed", async () => {
+test("a date another item quoted is taken off the one that borrowed it", async () => {
+  // The real case, 2026-09-05: "call Westcott" came back with due "today",
+  // quoting "I need to call Westcott" — a span with no date in it. He said
+  // "today" about the RENT, in the sentence before, and the rent item quoted
+  // it. Both candidates have to be present for this to be the real shape:
+  // what makes it a borrowing rather than a loose timing remark is that
+  // something else already claims those words.
   const r = await parse(
     { text: "I need to pay rent today. I need to call Westcott.", schema: TASK_SCHEMA },
     { model: stub({
-        created: [{ item: { title: "Call Westcott", due: "today" }, confidence: 0.95,
-                    source_text: "I need to call Westcott" }],
+        created: [
+          { item: { title: "Pay rent", due: "today" }, confidence: 0.95,
+            source_text: "I need to pay rent today" },
+          { item: { title: "Call Westcott", due: "today" }, confidence: 0.95,
+            source_text: "I need to call Westcott" },
+        ],
         modified: [], unparsed: [],
       }) }
   );
 
-  assert.equal(r.created.length, 1, "The item stays. Only the unsupported claim goes.");
-  assert.equal(r.created[0].item.due, undefined,
-    'He said "today" about the rent, in the sentence before. The model carried ' +
-    "it one item too far — seen in two runs of three against the real " +
-    "dictation, with a quote containing no date at all. The prompt already " +
-    "forbids this in as many words; an instruction ignored two times in three " +
-    "is not a guard. §2.2 decides the direction: a wrong entry is worse than a " +
-    "missing one, so the claim becomes missing.");
+  const rent = r.created.find((c) => /rent/i.test(String(c.item.title)))!;
+  const call = r.created.find((c) => /westcott/i.test(String(c.item.title)))!;
+
+  assert.equal(rent.item.due, "today", "The item that actually said it keeps it.");
+  assert.equal(call.item.due, undefined,
+    "§2.2 — a wrong entry is worse than a missing one, so the claim becomes " +
+    "missing. The prompt already forbids this in as many words and the model " +
+    "did it two runs in three; an instruction ignored that often is not a guard.");
+  assert.deepEqual(call.removed, [
+    { field: "due", value: "today", reason: "said about something else in the capture" },
+  ], "The reason has to be true. It was said — just not about this.");
+});
+
+test("a date said in the capture but claimed by nothing is kept and flagged", async () => {
+  // The other real case, from the same day and the opposite mistake. Four
+  // items came back with due "Monday" REMOVED and the reason "you didn't say
+  // it in those words". He had said, in those words: "a time scale spare room
+  // needs to be done I would say on Monday". It is a timing sentence covering
+  // things named earlier, so no item quotes it — and he dictates that way
+  // routinely, so the old rule threw away deadlines he had given and told him
+  // he had not given them.
+  const text = "I need to message the spare room places. A time scale, spare room needs to be done I would say on Monday.";
+  const r = await parse(
+    { text, schema: TASK_SCHEMA },
+    { model: stub({
+        created: [{ item: { title: "Message spare room places", due: "Monday" }, confidence: 0.9,
+                    source_text: "I need to message the spare room places" }],
+        modified: [], unparsed: [],
+      }) }
+  );
+
+  assert.equal(r.created[0].item.due, "Monday",
+    "Nothing else claims those words, so nothing was taken from anywhere. " +
+    "Removing it loses a deadline he actually gave.");
+  assert.deepEqual(r.created[0].unverified, [
+    { field: "due", value: "Monday", reason: "said in the capture, but not in the words this item quoted" },
+  ], "Kept, and honest about why it is not certain — so the caller can ask " +
+     "rather than assert something false about his own words.");
+  assert.equal(r.created[0].removed, undefined);
+});
+
+test("a date said nowhere in the capture is removed, and says so", async () => {
+  const r = await parse(
+    { text: "I need to call Westcott", schema: TASK_SCHEMA },
+    { model: stub({
+        created: [{ item: { title: "Call Westcott", due: "next Tuesday" }, confidence: 0.9,
+                    source_text: "I need to call Westcott" }],
+        modified: [], unparsed: [],
+      }) }
+  );
+  assert.equal(r.created[0].item.due, undefined);
   assert.deepEqual(r.created[0].removed, [
-    { field: "due", value: "today", reason: "not in the words this candidate quoted" },
-  ], "Removed, and said so. Removing it quietly would be the same fault as the " +
-     "model dropping a payee quietly.");
+    { field: "due", value: "next Tuesday", reason: "not said anywhere in the capture" },
+  ], "Distinct from a borrowing. This one he really did not say, and the " +
+     "caller can tell the two apart.");
+});
+
+test("a modification's quote counts when deciding what was borrowed", async () => {
+  // The quotes that matter are every candidate's, not just the created ones.
+  // A deadline claimed by a change to an existing record is claimed.
+  const r = await parse(
+    { text: "Move the dentist to Friday. I need to call Westcott.", schema: TASK_SCHEMA,
+      existing: [{ id: "d-1", label: "Book the dentist" }] },
+    { model: stub({
+        created: [{ item: { title: "Call Westcott", due: "Friday" }, confidence: 0.9,
+                    source_text: "I need to call Westcott" }],
+        modified: [{ target: { id: "d-1", described_as: "the dentist" }, intent: "move to Friday",
+                     confidence: 0.9, source_text: "Move the dentist to Friday" }],
+        unparsed: [],
+      }) }
+  );
+  assert.equal(r.created[0].item.due, undefined);
+  assert.equal(r.created[0].removed?.[0].reason, "said about something else in the capture");
 });
 
 test("a date the quote does contain is left alone", async () => {
