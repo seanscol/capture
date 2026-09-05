@@ -77,7 +77,13 @@ export function namedTokens(span: string, within = span, offset = 0): string[] {
   for (const m of span.matchAll(/\d[\d,.]*|[A-Z][a-zA-Z'’-]+/g)) {
     const word = m[0];
     if (/^\d/.test(word)) { found.push(word); continue; }
-    if (word === "I") continue; // The pronoun, not a name.
+    // The pronoun, and its contractions. "I'd", "I'm", "I've" and "I'll" all
+    // match the shape of a capitalised name and are none of them names — a
+    // real capture reported `Didn't use "I'd" from what you said`, which is
+    // noise dressed as a finding, and noise is how a report stops being read
+    // (§13.8). Split on the apostrophe so "O'Brien" survives: only a base of
+    // exactly "I" is the pronoun.
+    if (word.split(/['\u2019]/)[0] === "I") continue;
 
     // Sentence-initial capitals are grammar, not names. Look left in the
     // surrounding text, past whitespace, for a sentence end or the start.

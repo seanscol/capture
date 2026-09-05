@@ -601,3 +601,34 @@ test("a genuinely different name dropped from a change is still reported", async
     "2026-09-05 modifications had no detail-loss check at all — the one kind " +
     "of candidate that edits data he already has.");
 });
+
+test("the pronoun's contractions are not mistaken for names", async () => {
+  // A real capture reported: Didn't use "I'd" from what you said. "I'd",
+  // "I'm", "I've" and "I'll" all have the shape of a capitalised name and
+  // none of them is one. Reporting them is noise on top of the model doing
+  // nothing wrong, and it appears in almost every dictation he makes.
+  const quote = "for my treatment I'd like a TNS, I'm not sure which, I've starred some, I'll ask Kiara";
+  const r = await parse(
+    { text: quote, schema: TASK_SCHEMA },
+    { model: stub({
+        created: [{ item: { title: "Research TNS" }, confidence: 0.9, source_text: quote }],
+        modified: [], unparsed: [],
+      }) }
+  );
+  assert.deepEqual(r.created[0].dropped, ["Kiara"],
+    `Only the real name. Got: ${JSON.stringify(r.created[0].dropped)}`);
+});
+
+test("an apostrophe in a real name still counts", async () => {
+  // Splitting on the apostrophe must not swallow O'Brien with I'd — only a
+  // base of exactly "I" is the pronoun.
+  const quote = "call O'Brien about the thing";
+  const r = await parse(
+    { text: quote, schema: TASK_SCHEMA },
+    { model: stub({
+        created: [{ item: { title: "Call about the thing" }, confidence: 0.9, source_text: quote }],
+        modified: [], unparsed: [],
+      }) }
+  );
+  assert.deepEqual(r.created[0].dropped, ["O'Brien"]);
+});
