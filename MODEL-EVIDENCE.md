@@ -153,6 +153,52 @@ carried "next week", the vanished cancellation, the dropped name — is gone,
 and the three structural guards still sit behind them for the cases the model
 has not been shown yet.
 
+## A second dictation, and what it changed (2026-09-05)
+
+His second real capture — three modifications, no creations — is
+`tests/fixtures/dictation-2.ts`. It carries four things the first never did:
+a correction aimed at the TRANSCRIPTION rather than at himself ("West Scott
+WESCOTT", "not fighting filing"), a sentence that is an instruction about the
+other items rather than an item, alternatives instead of dates, and no
+creations at all.
+
+| | dictation 1 | dictation 2 |
+|---|---|---|
+| Clean runs | **3 of 3** | 2 of 3 |
+| Typical latency | 6.2-6.4s | 2.5-3.3s |
+
+The one repeating miss is "critical urgent" reaching the appeal but not the
+income tax return, while sitting in that item's own quote. Same shape as
+losing Megan, on a modification, and **no structural guard can see it**: it is
+not a name or a number so the dropped-name check is blind, and nothing was
+claimed that the quote does not contain so grounding is blind. The words are
+in `source_text`, so he can see them; the priority does not reach the item.
+
+### Strict decoding was on for a day and had to come off
+
+Measured back to back on 2026-09-05, which is the only way this comparison is
+valid — API latency moves enough between sessions that yesterday's figure
+against today's says nothing, and this was nearly recorded backwards because
+of it.
+
+| | strict off | strict on |
+|---|---|---|
+| six-item capture | 6.2s | **14.6s** — past the calling app's timeout |
+| three-item capture | 3.5s | 3.9s |
+
+Constrained decoding runs generation at roughly a third of the rate and the
+cost scales with how much is emitted. At fourteen seconds the six-item case
+falls back to keyword parsing every time, which is a worse answer than the
+imperfect model parse strict was protecting. It is now a switch,
+`CAPTURE_STRICT=1`, defaulted off, because which way it goes is a measurement
+and not a belief.
+
+A separate finding from the same session, worth keeping: `type: ["string",
+"null"]` on the target id cost roughly five seconds a parse under strict —
+46 tokens/sec against 155. Constrained decoding has to hold both branches of a
+union open. The id is a plain string now, empty meaning "not sure", converted
+back to null immediately. Do not tidy it into a union.
+
 ## The three failures that remain, and they are not equal
 
 Two of them are visible to Sean and one is not, which is the distinction that

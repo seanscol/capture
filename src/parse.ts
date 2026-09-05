@@ -10,6 +10,7 @@
 import { SYSTEM, userMessage } from "./prompt.ts";
 import { uncovered } from "./coverage.ts";
 import { droppedFromQuote, ungroundedFields } from "./grounding.ts";
+import { sharesAWord } from "./similarity.ts";
 import { validate } from "./schema.ts";
 import type { Candidate, Modification, ModelClient, ParseRequest, ParseResult, Unparsed } from "./types.ts";
 
@@ -138,7 +139,7 @@ export async function parse(
     });
   }
 
-  const known = new Set((request.existing ?? []).map((r) => r.id));
+  const labels = new Map((request.existing ?? []).map((r) => [r.id, r.label]));
 
   for (const raw of Array.isArray(reply.json.modified) ? reply.json.modified : []) {
     if (!isObject(raw)) continue;
@@ -159,13 +160,54 @@ export async function parse(
     // supply names nothing. It is dropped rather than passed on, but the
     // change stays a change: silently demoting it to a creation would turn
     // "cancel that" into "add that", the inverse of what was asked.
-    const id = typeof target.id === "string" && known.has(target.id) ? target.id : null;
+    //
+    // And the record it points at has to match the words it used.
+    //
+    // From a real dictation, 2026-09-05: the model returned
+    // described_as "Finish tax return" alongside the id of "Email profs re
+    // work, put in regular notification for checking work". It described the
+    // right record and handed over the wrong one — the two halves of its own
+    // answer contradict each other, and that is visible from here without
+    // knowing which half is right. So neither is believed.
+    //
+    // This check belongs in this service rather than in each caller. Only
+    // here are both halves in hand: the caller's own id-to-label list and the
+    // model's description of what it meant. The task app wrote its own copy
+    // of it the night this happened; the routine and media apps would each
+    // have had to rediscover the same bug.
+    // Empty means the model declined to name a record, which is an answer and
+    // not a failure (rule 3). It must not become a rejection: reporting "not
+    // one of the records supplied" for an id the model never claimed would be
+    // this service inventing a fault to explain its own encoding.
+    const offered = typeof target.id === "string" && target.id.trim() ? target.id.trim() : null;
+    let id: string | null = null;
+    let rejected: Modification["target"]["rejected"];
+
+    if (offered) {
+      const label = labels.get(offered);
+      if (label === undefined) {
+        rejected = { id: offered, reason: "not one of the records supplied" };
+      } else if (!sharesAWord(describedAs, label)) {
+        rejected = {
+          id: offered,
+          label,
+          reason: "the record it named and the words it used share nothing",
+        };
+      } else {
+        id = offered;
+      }
+    }
+
+    // Everything this change says, against everything its quote said.
+    const quote = raw.source_text as string;
+    const lost = droppedFromQuote({ describedAs, intent: raw.intent as string }, quote);
 
     modified.push({
-      target: { id, described_as: describedAs },
+      target: { id, described_as: describedAs, ...(rejected ? { rejected } : {}) },
       intent: raw.intent as string,
       confidence: raw.confidence as number,
-      source_text: raw.source_text as string,
+      source_text: quote,
+      ...(lost.length ? { dropped: lost } : {}),
     });
   }
 

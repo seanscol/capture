@@ -15,3 +15,4 @@ node_modules/
 # Written by the acceptance test so a run can be examined without paying for
 # another, different one.
 last-parse.json
+last-parse-2.json

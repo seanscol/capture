@@ -9,7 +9,9 @@
     "test:acceptance": "tsx --test tests/acceptance.test.ts",
     "dev": "tsx src/server.ts",
     "make-token": "node scripts/make-token.mjs",
-    "diff": "tsx scripts/diff-parse.mts"
+    "diff": "tsx scripts/diff-parse.mts",
+    "test:acceptance2": "tsx --test tests/acceptance-2.test.ts",
+    "test:acceptance:all": "npm run test:acceptance && npm run test:acceptance2"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.0"

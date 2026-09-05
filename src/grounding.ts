@@ -71,6 +71,35 @@ export function ungroundedFields(item: Record<string, unknown>, quote: string): 
  * the name belonged in, and putting it somewhere would be guessing at input
  * (§2.2) — the fault this is watching for, committed by the watcher.
  */
+/**
+ * Is this dropped name just an earlier attempt at one that WAS used?
+ *
+ * From his second dictation: "I need to call West Scott WESCOTT" — he says
+ * the name, then spells it out because speech-to-text got it wrong. The item
+ * correctly uses "Wescott", which leaves "West" and "Scott" sitting unused in
+ * its own quote. Reporting those as losses is not wrong exactly, but it is
+ * noise on top of the model doing the right thing, and a report that fires
+ * when nothing happened is how a report stops being read (§13.8).
+ *
+ * A variant is either contained in the used name — "scott" inside "wescott" —
+ * or shares its opening. Both are textual; neither knows anything about names.
+ *
+ * The risk, stated rather than discovered later: two genuinely different
+ * names that start alike, "Sam" used and "Samantha" dropped, would be
+ * suppressed and the loss would go unreported. That is a real false negative.
+ * It is accepted because the alternative fires on every spelled-out
+ * correction, and he corrects the transcription often enough that this
+ * paragraph does it twice.
+ */
+function looksLikeSameName(dropped: string, used: Set<string>): boolean {
+  const d = dropped.toLowerCase();
+  for (const u of used) {
+    if (u.includes(d) || d.includes(u)) return true;
+    if (d.length >= 3 && u.length >= 3 && d.slice(0, 3) === u.slice(0, 3)) return true;
+  }
+  return false;
+}
+
 export function droppedFromQuote(item: Record<string, unknown>, quote: string): string[] {
   const used = new Set(
     Object.values(item)
@@ -81,6 +110,7 @@ export function droppedFromQuote(item: Record<string, unknown>, quote: string): 
   return namedTokens(quote).filter((t) => {
     const key = t.toLowerCase();
     if (used.has(key) || seen.has(key)) return false;
+    if (looksLikeSameName(t, used)) return false;
     seen.add(key);
     return true;
   });

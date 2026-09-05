@@ -21,6 +21,13 @@ reschedule, mark done. If the caller supplied records, set target.id to the
 one meant, but only when you are sure it is that record and not a similar
 one; otherwise null. Put the speaker's own words in target.described_as.
 
+If the speaker says something already exists — "there's already one for X",
+"just adjust them", "update the thing about Y" — then what they said about it
+belongs here and not in created, even when they described it as if it were
+new. Creating a second copy of something they told you they already have is
+not a harmless extra item: it splits the record in two and neither half is
+now right.
+
 unparsed — anything meant as an item that you cannot map confidently. The
 speaker's words, verbatim, and why.
 
@@ -48,6 +55,11 @@ Rules, most important first:
    usually mean the speaker is getting more exact rather than withdrawing —
    keep the fuller version and everything in it. The same thing said twice
    is one item.
+
+   Some corrections are aimed at the transcription rather than at
+   themselves: spelling a name out after saying it, or naming the wrong word
+   and the right one together — "not fighting, filing". Take the corrected
+   form, and take a spelled-out name over the one that was transcribed.
 
 6. A detail said only inside cancelled words does not move onto whatever
    replaced them. If you cannot tell whether it still applies, leave it off

@@ -369,3 +369,164 @@ test("a sentence-opening capital is not mistaken for a name", async () => {
     '"Call" and "Then" open sentences. Treating every capital as a name would ' +
     "report one on almost every item, which is how a report stops being read.");
 });
+
+// --- a modification whose own two halves disagree -------------------------
+
+test("a record that shares nothing with the words used is refused", async () => {
+  // From a real dictation, 2026-09-05. He said "I need to finish my tax
+  // return... there's already a task for income tax, so just adjust them",
+  // and the model handed back the id of "Email profs re work, put in regular
+  // notification for checking work" while describing "Finish tax return". It
+  // described the right record and pointed at the wrong one.
+  //
+  // A wrong target on a record that already exists is the expensive kind of
+  // wrong: not a line he deletes, an edit to something he never mentioned.
+  const r = await parse(
+    { text: "I need to finish my tax return tomorrow, it's critical urgent",
+      schema: TASK_SCHEMA,
+      existing: [
+        { id: "e-1", label: "Email profs re work, put in regular notification for checking work" },
+        { id: "e-2", label: "File income tax return" },
+      ] },
+    { model: stub({
+        created: [],
+        modified: [{ target: { id: "e-1", described_as: "Finish tax return" }, intent: "set the deadline to tomorrow",
+                     confidence: 0.9, source_text: "I need to finish my tax return tomorrow" }],
+        unparsed: [],
+      }) }
+  );
+
+  assert.equal(r.modified.length, 1, "It stays a change. Only the target is refused.");
+  assert.equal(r.modified[0].target.id, null,
+    "The two halves of the model's own answer contradict each other, and that " +
+    "is visible from here without knowing which half is right. So neither is " +
+    "believed.");
+  assert.equal(r.modified[0].target.described_as, "Finish tax return",
+    "His words survive, so the caller can ask which record he meant.");
+  assert.deepEqual(r.modified[0].target.rejected, {
+    id: "e-1",
+    label: "Email profs re work, put in regular notification for checking work",
+    reason: "the record it named and the words it used share nothing",
+  }, "The caller can say WHY it cannot act, rather than showing \"I couldn't " +
+     "tell which one you meant\" for a reader that was perfectly clear and " +
+     "pointed at the wrong record.");
+});
+
+test("a record that shares a real word is accepted", async () => {
+  const r = await parse(
+    { text: "I need to finish my income tax return tomorrow",
+      schema: TASK_SCHEMA,
+      existing: [{ id: "e-2", label: "File income tax return" }] },
+    { model: stub({
+        created: [],
+        modified: [{ target: { id: "e-2", described_as: "income tax return" }, intent: "set the deadline to tomorrow",
+                     confidence: 0.9, source_text: "I need to finish my income tax return tomorrow" }],
+        unparsed: [],
+      }) }
+  );
+  assert.equal(r.modified[0].target.id, "e-2", "A low bar on purpose. This is not a near match to second-guess.");
+  assert.equal(r.modified[0].target.rejected, undefined);
+});
+
+test("an id the caller never supplied is refused, and says so differently", async () => {
+  const r = await parse(
+    { text: "cancel the headphones thing", schema: TASK_SCHEMA, existing: EXISTING },
+    { model: stub({
+        created: [],
+        modified: [{ target: { id: "t-999", described_as: "the headphones thing" }, intent: "cancel",
+                     confidence: 0.8, source_text: "cancel the headphones thing" }],
+        unparsed: [],
+      }) }
+  );
+  assert.equal(r.modified[0].target.id, null);
+  assert.deepEqual(r.modified[0].target.rejected, { id: "t-999", reason: "not one of the records supplied" },
+    "Distinct from a contradiction: the caller can tell 'I could not identify " +
+    "it' from 'it identified two different things'.");
+});
+
+test("function words alone are not agreement", async () => {
+  const r = await parse(
+    { text: "change the thing about the stuff", schema: TASK_SCHEMA,
+      existing: [{ id: "x-1", label: "Buy the thing for the stuff" }] },
+    { model: stub({
+        created: [],
+        modified: [{ target: { id: "x-1", described_as: "the thing about the stuff" }, intent: "change it",
+                     confidence: 0.5, source_text: "change the thing about the stuff" }],
+        unparsed: [],
+      }) }
+  );
+  assert.equal(r.modified[0].target.id, null,
+    '"the", "thing" and "stuff" carry no information. Counting them as ' +
+    "agreement would make the check pass on almost any pair.");
+});
+
+test("a description the model left blank is not treated as a contradiction", async () => {
+  const r = await parse(
+    { text: "cancel the headphones thing", schema: TASK_SCHEMA, existing: EXISTING },
+    { model: stub({
+        created: [],
+        modified: [{ target: { id: "t-101", described_as: "headphones" }, intent: "cancel",
+                     confidence: 0.9, source_text: "cancel the headphones thing" }],
+        unparsed: [],
+      }) }
+  );
+  assert.equal(r.modified[0].target.id, "t-101");
+});
+
+test('an empty id means "not sure", not a bad record', async () => {
+  // The schema carries `id` as a plain string rather than a string-or-null
+  // union, because the union cost roughly five seconds a parse under strict
+  // decoding. Empty carries "I am not sure" instead. It must not be reported
+  // as a refusal — that would be the service inventing a fault to explain its
+  // own encoding, and the caller would show him a problem that did not happen.
+  const r = await parse(
+    { text: "change the thing about the physio", schema: TASK_SCHEMA, existing: EXISTING },
+    { model: stub({
+        created: [],
+        modified: [{ target: { id: "", described_as: "the thing about the physio" }, intent: "change it",
+                     confidence: 0.5, source_text: "change the thing about the physio" }],
+        unparsed: [],
+      }) }
+  );
+  assert.equal(r.modified.length, 1);
+  assert.equal(r.modified[0].target.id, null);
+  assert.equal(r.modified[0].target.rejected, undefined,
+    "Nothing was rejected. The model said it did not know, and that is the answer.");
+  assert.equal(r.modified[0].target.described_as, "the thing about the physio");
+});
+
+test("a name superseded by a spelled-out correction is not reported as lost", async () => {
+  // "I need to call West Scott WESCOTT" — he says the name, then spells it
+  // out because speech-to-text got it wrong. Using "Wescott" is correct, and
+  // flagging the two words it replaced would be the report firing when
+  // nothing went wrong (§13.8: a checker that reports constantly gets skipped).
+  const quote = "I need to call West Scott WESCOTT to call them tomorrow";
+  const r = await parse(
+    { text: quote, schema: TASK_SCHEMA, existing: [{ id: "w-1", label: "Call Wescott" }] },
+    { model: stub({
+        created: [],
+        modified: [{ target: { id: "w-1", described_as: "Call Wescott" }, intent: "call tomorrow",
+                     confidence: 0.9, source_text: quote }],
+        unparsed: [],
+      }) }
+  );
+  assert.equal(r.modified[0].dropped, undefined,
+    `"West" and "Scott" are earlier attempts at "Wescott", not losses.\n    got: ${JSON.stringify(r.modified[0].dropped)}`);
+});
+
+test("a genuinely different name dropped from a change is still reported", async () => {
+  const quote = "cancel the dentist thing, Megan is dealing with it";
+  const r = await parse(
+    { text: quote, schema: TASK_SCHEMA, existing: [{ id: "d-1", label: "Book the dentist" }] },
+    { model: stub({
+        created: [],
+        modified: [{ target: { id: "d-1", described_as: "the dentist thing" }, intent: "cancel",
+                     confidence: 0.9, source_text: quote }],
+        unparsed: [],
+      }) }
+  );
+  assert.deepEqual(r.modified[0].dropped, ["Megan"],
+    "Suppressing variants must not suppress an unrelated name. Until " +
+    "2026-09-05 modifications had no detail-loss check at all — the one kind " +
+    "of candidate that edits data he already has.");
+});

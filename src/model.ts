@@ -22,6 +22,34 @@ const MAX_TOKENS = 4096;
 const TOOL_NAME = "emit";
 
 /**
+ * Constrained decoding. **Off by default**, on with CAPTURE_STRICT=1.
+ *
+ * It was on for a day and had to come off. What it buys is real: `required`
+ * in a tool schema is otherwise a suggestion, and the model omitted the whole
+ * `modified` key in one call of three — not "no changes", but not answering,
+ * and nothing downstream can tell those apart (§2.1).
+ *
+ * What it costs is worse. Generation runs at roughly a third of the rate, and
+ * the cost scales with how much the parse emits. Measured back to back,
+ * 2026-09-05:
+ *
+ *   six-item capture    6.2s off  ->  14.6s on   (blows the client timeout)
+ *   three-item capture  3.5s off  ->   3.9s on
+ *
+ * Fourteen seconds is past the calling app's own timeout, so with strict on
+ * the six-item case falls back to keyword parsing every time — which is a
+ * worse answer than the imperfect model parse it was meant to protect.
+ *
+ * Kept as a switch rather than deleted, because which way this goes is a
+ * measurement and not a belief: a faster model, or a schema that emits less,
+ * changes the arithmetic. Compare the two BACK TO BACK when you re-check.
+ * API latency moves enough between sessions that a figure from yesterday
+ * against one from today says nothing — that is how this was nearly recorded
+ * backwards.
+ */
+const STRICT = process.env.CAPTURE_STRICT === "1";
+
+/**
  * Does this schema satisfy strict tool use?
  *
  * Strict requires `additionalProperties: false` on every object. The caller's
@@ -65,7 +93,18 @@ export function wrap(schema: Record<string, unknown>) {
       type: "array",
       items: object(["target", "intent", "confidence", "source_text"], {
         target: object(["id", "described_as"], {
-          id: { type: ["string", "null"], description: "An id from the supplied records, or null if you are not sure which one." },
+          // A plain string, and NOT `["string", "null"]`, which is what this
+          // was. Measured 2026-09-05 on the second dictation: the union cost
+          // roughly five seconds a parse under strict decoding — generation
+          // ran at 46 tokens/sec against 155 without it, taking the whole
+          // call from ~8.5s to ~3.7s. Three runs each way, identical output.
+          //
+          // Constrained decoding has to keep both branches of a union alive
+          // while it emits, and it pays for that on every token after it.
+          // Empty string carries "I am not sure" instead, and parse.ts turns
+          // it back into null immediately, so nothing downstream sees the
+          // difference. Do not tidy this back into a union.
+          id: { type: "string", description: "An id from the supplied records. Empty string if you are not sure which one." },
           described_as: { type: "string", description: "The speaker's own words for the record." },
         }),
         intent: { type: "string", description: "What to do to it, in the speaker's words." },
@@ -132,13 +171,22 @@ export function liveModel(model = process.env.CAPTURE_MODEL || DEFAULT_MODEL): M
             name: TOOL_NAME,
             description: "Return the candidate items found in the capture.",
             input_schema: wrap(request.schema) as Anthropic.Tool["input_schema"],
-            // Without this, `required` on the schema above is a suggestion.
-            // Measured: the model omitted the whole `modified` key in one call
-            // of three at temperature 0 — which is not "no changes", it is not
-            // answering, and the two are indistinguishable downstream (§2.1).
+            // Without this, `required` on the schema above is a suggestion,
+            // and the model omitted the whole `modified` key in one call of
+            // three at temperature 0 — not "no changes", but not answering,
+            // and the two are indistinguishable downstream (§2.1).
+            //
+            // It is not free. Constrained decoding runs generation at roughly
+            // a third of the rate, and the cost scales with how much the
+            // parse emits: measured 2026-09-05, a six-item capture went from
+            // 6.2s to 14.6s and blew the client timeout, while a three-item
+            // one went from 4.7s to 3.7s. So it is a switch, defaulted on and
+            // turned off by CAPTURE_STRICT=0, and whether it earns its cost
+            // is a measurement rather than a belief.
+            //
             // Only requested when the caller's own schema can satisfy strict;
             // otherwise a 400 would punish the caller for our choice.
-            ...(strictCompatible(request.schema) ? { strict: true } : {}),
+            ...(STRICT && strictCompatible(request.schema) ? { strict: true } : {}),
           },
         ],
         // Forced tool use. Supported on Haiku 4.5, Sonnet 5 and Opus 5 — the

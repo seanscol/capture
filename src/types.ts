@@ -35,10 +35,28 @@ export type Modification = {
    * the caller supplied; `described_as` always carries the speaker's words so
    * the caller can ask which one was meant.
    */
-  target: { id: string | null; described_as: string };
+  target: {
+    id: string | null;
+    described_as: string;
+    /**
+     * Set when the model offered an id and this service refused it. The
+     * caller gets to say why it cannot act, instead of showing "I could not
+     * tell which one you meant" for a reader that was perfectly clear and
+     * pointed at the wrong record.
+     */
+    rejected?: { id: string; label?: string; reason: string };
+  };
   intent: string;
   confidence: number;
   source_text: string;
+  /**
+   * Names or numbers in this change's own quote that neither the description
+   * nor the intent mentions. The same check the created items get — until
+   * 2026-09-05 modifications had no detail-loss check at all, which meant a
+   * name dropped out of "cancel the thing for Megan" would have gone
+   * unreported on the one kind of candidate that edits existing data.
+   */
+  dropped?: string[];
 };
 
 /** §2.2: anything unparseable is stored verbatim and flagged. */

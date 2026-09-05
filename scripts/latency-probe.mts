@@ -12,8 +12,16 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { loadEnvLocal } from "../src/env.ts";
 import { SYSTEM, userMessage } from "../src/prompt.ts";
-import { DEFAULT_MODEL, wrap } from "../src/model.ts";
+import { DEFAULT_MODEL, strictCompatible, wrap } from "../src/model.ts";
 import { DICTATION, TASK_SCHEMA, EXISTING } from "../tests/fixtures/dictation.ts";
+import { DICTATION_2, EXISTING_2 } from "../tests/fixtures/dictation-2.ts";
+
+// Which dictation: `npx tsx scripts/latency-probe.mts 2` for the second.
+const second = process.argv.includes("2");
+// `--no-strict` to time the same request without constrained decoding.
+const STRICT = !process.argv.includes("--no-strict");
+const TEXT = second ? DICTATION_2 : DICTATION;
+const RECORDS = second ? EXISTING_2 : EXISTING;
 
 loadEnvLocal();
 const model = process.env.CAPTURE_MODEL || DEFAULT_MODEL;
@@ -23,9 +31,15 @@ let connected = 0, firstToken = 0;
 const stream = new Anthropic({ maxRetries: 0 }).messages.stream({
   model,
   max_tokens: 4096,
+  // Match what the service actually sends. The first version of this probe
+  // predated temperature and strict, so it timed a request the service does
+  // not make — bug family (c), the instrument not sharing the code's
+  // assumptions.
+  ...(model.startsWith("claude-haiku") ? { temperature: 0 } : {}),
   system: SYSTEM,
-  messages: [{ role: "user", content: userMessage(DICTATION, EXISTING) }],
+  messages: [{ role: "user", content: userMessage(TEXT, RECORDS) }],
   tools: [{ name: "emit", description: "Return the candidate items found in the capture.",
+            ...(STRICT && strictCompatible(TASK_SCHEMA) ? { strict: true } : {}),
             input_schema: wrap(TASK_SCHEMA) as never }],
   tool_choice: { type: "tool", name: "emit" },
 });
@@ -38,6 +52,7 @@ stream.on("streamEvent", (e) => {
 const msg = await stream.finalMessage();
 const t1 = Date.now();
 
+console.log(`  dictation          : ${second ? 2 : 1}   strict: ${STRICT}`);
 console.log(`  model              : ${msg.model}`);
 console.log(`  connection + queue : ${connected - t0} ms`);
 console.log(`  to first token     : ${firstToken - t0} ms`);
