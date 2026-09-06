@@ -1,6 +1,6 @@
 # Operating notes — constraints from the archive
 
-**Version 2.8 · 2026-09-06** — versioned as a set with `SYSTEM.md`, because
+**Version 3.0 · 2026-09-06** — versioned as a set with `SYSTEM.md`, because
 these files ship together and the drift machinery keys on this line. The
 number tracks the release, not this file's content, which changes rarely.
 

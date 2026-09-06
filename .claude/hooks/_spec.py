@@ -17,14 +17,13 @@ ECOSYSTEM = PROJECTS / "ecosystem"
 # same spec, was named in none of them. Three lists is three chances to update
 # two of them.
 #
-# VERSIONED are the files copied out of ecosystem as a set and checked for
-# drift. They share one `**Version` line, so classify() can place them.
-# DECISIONS.md is protected but not versioned: it carries no Version line, so
-# every differing copy of it would come back `unknown` and the report would be
-# noise. That is a finding for the planning chat, not something a code session
-# fixes by adding a line to the file it may not write.
-VERSIONED = ("SYSTEM.md", "operating-notes.md")
-PROTECTED = frozenset(VERSIONED) | {"DECISIONS.md"}
+# The three are copied out of ecosystem as a set and share one `**Version`
+# line, so classify() can place any of them. DECISIONS.md was protected but
+# unversioned until v3.0, which meant every difference in it could only ever
+# come back `unknown` — guarded against editing, and unable to say whether the
+# copy was stale. Being on this list is what makes a difference readable.
+VERSIONED = ("SYSTEM.md", "DECISIONS.md", "operating-notes.md")
+PROTECTED = frozenset(VERSIONED)
 
 # (start heading, stop heading) for each block CLAUDE.md must carry inline.
 BLOCKS = [
@@ -113,23 +112,21 @@ def under_projects(path, root=None):
     return any(f == r or r in f.parents for f in forms for r in roots)
 
 
-VERSION = re.compile(r"\*\*Version\s+(\d+)\.(\d+)")
+def version(path):
+    """The `**Version 2.8 · …**` line as a comparable tuple, or None.
 
-
-def version(text):
-    """(major, minor) from the header, or None if it cannot be read.
-
-    None is a real answer and must not be treated as zero: a copy whose
-    version cannot be parsed is one this check knows nothing about, and
-    guessing would make it assert the thing it cannot tell (§2.1).
-
-    NOTE: this repo's check-refs-stop.py passes the file's text; fnd-tracker's
-    _spec.version() takes a path and does its own read. Same name, different
-    argument, two implementations of the same fix written independently. Not
-    reconciled here -- reported to the planning chat.
+    None is a real answer and callers must treat it as one: a file whose
+    version cannot be read is a file whose position in the sequence is
+    unknown, and unknown is not "behind" (§2.1).
     """
-    m = VERSION.search(text)
-    return (int(m.group(1)), int(m.group(2))) if m else None
+    try:
+        text = Path(path).read_text()
+    except OSError:
+        return None
+    m = re.search(r"^\*\*Version\s+([0-9]+(?:\.[0-9]+)*)", text, re.M)
+    if not m:
+        return None
+    return tuple(int(n) for n in m.group(1).split("."))
 
 
 def classify(source_version, copies):

@@ -1,7 +1,13 @@
 # SYSTEM.md — Sean's personal app ecosystem
 
-**Version 2.8 · 2026-09-06** — supersedes v2.7. First version to reach the
-repos since v2.3: **v2.4–v2.7 were written and never copied out**, so every
+**Version 3.0 · 2026-09-06** — supersedes v2.8, which was **issued twice with
+different content**: the planning chat revised it an hour later without
+bumping the number, so ecosystem and the repos held different bytes at the
+same version and the drift check could only read that as a copy edited in
+place. **A version number identifies a release; reissuing one with different
+content breaks every guard that keys on it.** Bumped rather than patched, so
+the classifier sees `pending` and not `drifted`. v2.8 was the first version
+to reach the repos since v2.3: **v2.4–v2.7 were written and never copied out**, so every
 session spent two days auditing against a spec four versions old and
 reporting staleness that had already been fixed. Same failure as the four
 undeployed commits in the task app, in the same week. Growth is earned —

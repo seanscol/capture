@@ -1,5 +1,9 @@
 # DECISIONS.md — history, reasoning, and corrections
 
+**Version 3.0 · 2026-09-06** — versioned as a set with `SYSTEM.md`. Added
+because without this line the drift check could only ever classify this file
+as `unknown`: protected but not versioned. `[FND-chat 2026-09-06]`
+
 Companion to `SYSTEM.md`. That file states what is currently true; this one
 records **how it got that way** — every decision with its reasoning, every
 question with its history, and every correction with what was wrong, who
@@ -424,6 +428,58 @@ chat because it was the only consequence touching a rule.
 ---
 
 ## Part 4 — Changelog
+
+**3.0 — 2026-09-06.** `DECISIONS.md` joins the versioned set, and the hooks
+are found to have forked.
+
+- **This file now carries a `**Version` line.** Without one the drift check
+  could only classify it `unknown` — protected but not versioned. Numbered
+  3.0 rather than reissuing 2.9, on the rule adopted one version earlier:
+  **burn a number rather than reuse one.**
+- **The hooks have forked, and nothing could have told anyone.**
+  `adhd-tasks` and `capture` carry a different drift-check implementation
+  from `fnd-tracker` — two sessions solved the same problem independently and
+  `_spec.version()` takes the file's text in one and its path in the other.
+  **The hooks are shared tooling copied into every repo, exactly like
+  `SYSTEM.md`, but nothing versions them and nothing checks them: the drift
+  detector does not detect drift in itself.** Bug family (l), fourth
+  instance. `[FND-chat 2026-09-06]`
+  **Resolved:** `fnd-tracker`'s implementation survives — it is the one
+  carrying `--defs`, the single shared definition, path-based matching and
+  missing-copy detection. Take it wholesale rather than merging. `[SEAN]`
+  **Proposed, not yet done:** hooks live in
+  `~/Projects/ecosystem/.claude/hooks/`, are copied out like the spec, carry
+  a version, and are drift-checked like everything else. `[PROPOSED]`
+- **A copy that was never made is in no list of copies**, so a repo missing
+  `operating-notes.md` read as a repo in agreement. §2.1 exactly: absence of
+  data is not good news. Now reported. `[FND-chat 2026-09-06]`
+
+**2.9 — 2026-09-06.** Two planning-chat errors, both caught by sessions.
+
+- **v2.8 was issued twice with different content.** Same version line,
+  different bytes, an hour apart. The drift check reported it as *"a copy was
+  edited in place"* — the only branch it has for that evidence — and nobody
+  had edited a copy. **The source changing without a bump is a case the
+  classifier cannot see.** Bug family (b): a value one part respects and
+  another assumes. Fix is discipline, not code: **never reissue a version
+  number.** A content hash beside the version line would catch it if it
+  recurs — the version says which release, the hash says whether it is
+  actually that release. `[capture-chat, FND-chat 2026-09-06]` `[PROPOSED]`
+- **The instruction to run `check-refs.py` over `operating-notes.md` would
+  have produced silent false-clean.** That file has its own `## 4.`, `## 9.`
+  and `## 10.` headings, so three of its five §-references resolve against
+  the wrong document and report clean; only §2.6 and §12 would show broken.
+  **That is not noise, it is silence** — precisely what `check-refs.py`'s own
+  docstring names as the failure it exists for. References must be checked
+  against the definitions of the document they point *into*, which is what
+  the `--defs` flag does. Third instance of bug family (l). `[FND-chat,
+  capture-chat 2026-09-06]`
+- **The canonical list of what a repo holds** now lives only in
+  `NEXT-STEPS.md`; §13.7 step 1 points at it. It was maintained in two places
+  and drifted within a week — §5.8 applied to a file list. `NEXT-STEPS.md`
+  itself is deliberately not in the repos: one copy on disk, read at its path.
+  `[SEAN 2026-09-06]`, on `[FND-chat]`'s objection, which was better reasoned
+  than the instruction it overrode.
 
 **2.8 — 2026-09-06.** The first version since v2.3 to reach the repos.
 
