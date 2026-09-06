@@ -1,10 +1,59 @@
 # SYSTEM.md — Sean's personal app ecosystem
 
-**Version 2.3 · 2026-09-03** — supersedes v2.2 (same day), which superseded
-v2.0 (planning chat) and v2.1 (FND chat's edited copy). The FND chat should
-still diff this against its v2.1 to confirm nothing of theirs was lost.
+**Version 2.8 · 2026-09-06** — supersedes v2.7. First version to reach the
+repos since v2.3: **v2.4–v2.7 were written and never copied out**, so every
+session spent two days auditing against a spec four versions old and
+reporting staleness that had already been fixed. Same failure as the four
+undeployed commits in the task app, in the same week. Growth is earned —
+step 0b, the capture service and the ADHD wiring all shipped. **§4 rewritten as
+structural constraints only; clinical and biographical detail removed**, on
+the principle that intimate detail in a spec invites a session to mistake
+salience for relevance. v2.5 added §4A and rewrote §10 from the built
+capture service; v2.4 rewrote §5.6, §7, §8, §13.1 and §13.8 from what was
+built rather than what was proposed.
 
-**Status of every build step now lives in `NEXT-STEPS.md` and nowhere else.**
+**`operating-notes.md` sits beside this file and is part of the spec.**
+See §4A.
+
+---
+
+## Read this before adding anything to this file
+
+Two findings from the archive outrank everything else here, and Sean has
+named them himself as the ones that matter. `[SEAN 2026-09-04]`
+
+**He remembers the architecture of a life better than living it.** Thousands
+of lines about what will be done; almost none about what was done.
+
+**Nothing gets completed.** No record of anything finished in four years of
+writing.
+
+**Designing this system is that pattern running right now.** SYSTEM.md went
+from v2.2 to v2.6 in twenty-four hours and roughly doubled in length, while
+one component shipped. A specification is architecture. It is the most
+comfortable possible substitute for the thing it describes, and it produces
+the feeling of progress at none of the cost.
+
+### The constraint that follows
+
+**The spec may grow only in a version where something shipped. It may shrink
+at any time.** Every new version of this file must correspond to a step
+marked done in `NEXT-STEPS.md` with live evidence. A version that only adds
+analysis is the failure mode, not the work.
+
+**Corollary for any planning session:** when the choice is between recording
+something and building something, build. An unrecorded insight costs one
+insight. A month of unrecorded building costs nothing at all, because the
+code is the record.
+
+**The one exception is retrieval** — `operating-notes.md` item 2. Writing
+something down so it can be found later is the single function the archive
+proves is worth it. That is a low bar to clear and most additions do not
+clear it.
+
+---
+
+**Status of every build step lives in `NEXT-STEPS.md` and nowhere else.**
 v2.2 recorded done/not-done in three files and they disagreed within a day.
 §13.7 gives order and reasoning only. This is §5.8 applied to status.
 
@@ -194,21 +243,26 @@ shouldn't arise. `[ADHD-chat]`
 
 ## 4. The person, as far as the software is concerned
 
-- **ADHD.** Task *initiation* is the disability, not organisation. He knows
-  what needs doing; deciding and starting are the hard parts. Anything
-  requiring upkeep gets abandoned within a week. `[NEXT]`
-- **Bipolar, on lithium.** Capacity varies — sometimes on a rough cycle,
-  sometimes not; *do not assume it is predictable.* Lithium affects
-  motivation and processing speed independently of mood. `[ECO]` `[NEXT]`
-  Confirmed directly: *"So I am medicated."* `[SEAN 2026-09-03]` Recorded
-  because Sean's saved claude.ai profile asserted the opposite and every
-  session reads both; this file is the one that is right.
-- **FND** with calf-exertion-triggered autonomic dysfunction, following
-  double-knee arthroscopy. cPTSD history. `[FND]`
-- **Creative professional.** Work is often open-ended. `[ECO]`
-- **Night-shifted.** Wakes around midday, active to ~4am. `[FND]` `[NEXT]`
-- **London. iOS.** Dictates heavily. Scriptable widgets, iOS Shortcuts and
-  Back Tap for capture. `[NEXT]` `[FND]`
+**Structural facts only.** Everything below constrains a design decision and
+is stated as a constraint rather than as biography. Clinical and personal
+detail is deliberately absent — see `operating-notes.md` for why.
+
+- **Task initiation is the disability, not organisation.** He knows what
+  needs doing; deciding and starting are the hard parts. **Anything
+  requiring upkeep gets abandoned within a week.** `[NEXT]`
+- **Capacity varies and is not predictable.** Not on a reliable cycle.
+  Never assume today resembles yesterday; never project forward (§2.6).
+  `[ECO]` `[NEXT]`
+- **Physical exertion has consequences that arrive later, and are not
+  proportional to effort.** That is the whole reason the FND tracker exists
+  and why §2.7 forbids any other app computing about the body. The clinical
+  detail lives in that app's own repo, where it is load-bearing; it does not
+  belong here. `[FND]`
+- **Work is open-ended.** Creative projects with no fixed end state. `[ECO]`
+- **Night-shifted.** Wakes around midday, active to ~4am — which is why the
+  logical day runs 05:00 → 05:00 and not midnight (§5.1). `[FND]` `[NEXT]`
+- **iOS. Dictates heavily.** Scriptable widgets, Shortcuts and Back Tap for
+  capture. `[NEXT]` `[FND]`
 
 ### How he works `[FND §4]` unless noted
 
@@ -225,6 +279,69 @@ shouldn't arise. `[ADHD-chat]`
   feature.
 - **He is not a coder.** Explain what a change does in plain terms before
   making it. Don't assume he can review a diff. `[SEAN]`
+
+---
+
+## 4A. What the archive shows
+
+`operating-notes.md` sits beside this file and is part of the spec. Eleven
+regularities derived from a four-year personal archive, each with a line
+citation, agreed by Sean. `[SEAN 2026-09-04]` **It is content-free by
+instruction** — the source analysis used biography as evidence and none of
+it survives, because the lessons are structural and **intimate detail
+sitting in a spec is an invitation for a session to mistake salience for
+relevance and build a rule out of it.** Apply the same test to anything
+added here. Nothing in it is clinical.
+
+Six of its eleven items change what gets built:
+
+**A completion channel and a decay mechanism are missing**, and their
+absence is the archive's most consistent finding — no record of anything
+being finished in 137,000 words. Any app holding a list needs both, or the
+list grows forever, which is what the archive shows happening.
+
+**Asterisks are the priority signal; frequency is the anxiety signal.** He
+already runs a hand-applied one-to-seven notation, and the most-written-about
+items are the least finished. Any ranking reading repetition or recency as
+importance inverts his real priorities. **Open question: does the ADHD app's
+forced-choice ranking read the asterisks?**
+
+**Bias every surface toward the past tense.** *"What happened today"* is the
+scarce input. This cuts against the grain of a task app and should be
+resolved deliberately rather than by default.
+
+**Breaking an unresolved thing into subtasks is the archive's most
+consistently demonstrated failure mode.** The only passages in four years
+that resolve anything are long and unbulleted. **This lands directly on the
+capture service** — see §10.
+
+**Plan size, tracked as a number and shown back.** Scope inflates as capacity
+drops. Stating *"this week's plan is four times last month's"* describes what
+he wrote rather than predicting what he will do, so §2.6 holds. This is his
+own idea; the instrument is specified in the archive and unbuilt.
+
+**There is no second person, and the system must not appear to be one.** It
+can surface a signal early and make it visible; it cannot be the one who
+notices, and designing as though it can replaces a gap with the appearance
+of one being filled. **The right output of this pattern is a task with a
+name on it: who gets called.** That task exists on no list. See §12 D3/Q2,
+which reaches the same conclusion from a different direction.
+
+### The meta-risk, and the test that answers it
+
+The archive holds more than twenty full daily routines across four years,
+identical in shape, none evidenced as running for a month. An integrated app
+system is structurally the twenty-first, and more elaborate than any of them.
+
+What would make it different is narrow. **Every previous system recorded what
+he intended. This one has to record what happened.** Apply that test to any
+proposed feature. It is a sharper form of §9's *"it must replace checking,
+not add to it."*
+
+The reason to build it anyway is retrieval: the archive contains two
+near-identical rule lists, the second written because the first had been
+lost. A system that did nothing but retrieval would already be worth it, and
+it is the one thing the corpus proves he cannot do unaided.
 
 ---
 
@@ -253,7 +370,13 @@ Every event records a stable identity, when it happened, **which logical
 day it belongs to**, what kind of thing it was, and **who did it** — with
 system actors scoring zero (§2.4). These are requirements, not field names.
 
-**5.4 Every app exposes two endpoints.**
+**5.4 "Wire the app to it" means every capture path**, not the one the
+contract names. The ADHD app's `/api/quick` was wired to the capture service
+while the box inside the app posts to `/api/import` — so the endpoint in the
+contract worked and the thing he uses daily was unchanged. `[ADHD-chat
+2026-09-05]`
+
+**Every app exposes two endpoints.**
 
 | | Path | Contract |
 |---|---|---|
@@ -266,6 +389,26 @@ global app reads across, read-only. For FND the endpoints that matter are
 need, nothing an author would decide"*), `widget`, `room`, `export`.
 `[FND-chat]` Read-only governs how global treats *other apps*; global may
 own a store of its own (§12 Q9).
+
+**A link is not a read.** The routine app opening
+`adhd-tasks-mu.vercel.app/week` in a browser is not one app reading another:
+no data crosses, no dependency is created, and the task app still owns the
+answer. §5.5 and §2A.3 are untouched by it. Worth stating because the
+question came up and the instinct was to seek an exception where none was
+needed. `[ADHD-chat 2026-09-06]`
+
+**One named exception: the backup script** (§13.1). It reads both apps'
+`/api/export` daily. It is not an app, but "operational tooling doesn't
+count" is the kind of quiet reinterpretation this document keeps getting
+caught by, so it is recorded as an exception rather than folded into the
+rule. `[SEAN 2026-09-04]` The reasoning: the corrections log shows broad
+categories get abused (1, 7, 8) and specific instances don't, and §13.8's
+audit task will be the second case — two instances tell you what the
+category is, one tells you nothing. Both chats raised this independently and
+neither reinterpreted the rule on their own authority, which is the
+behaviour the rule exists to produce. What makes the exception defensible is
+that the script holds its own revocable credential (`INTEGRATION_TOKEN` for
+FND, `ACCESS_KEY` for ADHD) and reads only.
 
 **5.6 Auth.**
 
@@ -283,49 +426,47 @@ by those four routes, so the global app's access can be revoked without
 killing the Scriptable widgets. Both need setting in Vercel. D2's "own
 revocable credential" is now possible.
 
-**Verified live, 2026-09-03.** `[FND-chat]` Every claim below was checked
-against production or `vercel env ls`, not read off the code.
+**Verified live, 2026-09-04.** `[FND-chat]` Checked against production and
+`vercel env ls`, not read off the code. **Step 0b is done** — for step
+status see `NEXT-STEPS.md`, not this section.
 
 | | State |
 |---|---|
-| `WIDGET_TOKEN` | Set in Vercel. This is what holds the export gate. |
-| `CRON_SECRET` | Set in Vercel. |
-| `API_TOKEN` | **Not set.** |
-| `INTEGRATION_TOKEN` | **Not set** — exists only in code written 2026-09-02. |
+| `API_TOKEN` | Set. Gates every write. |
+| `INTEGRATION_TOKEN` | Set. Read token for the backup script, revocable alone. |
+| `WIDGET_TOKEN` | Set. On the phone, in Shortcuts and Scriptable. |
+| `CRON_SECRET` | Set. |
 
-Gates confirmed by status code: `widget` `room` `digest` `export` all 401
-with no credential; `export` also 401 with a *wrong* token, so the gate
-compares against a real value rather than failing open. `logs` and
-`biometrics` return 200, deliberately.
+> **The write hole is closed.** An unauthenticated
+> `DELETE /api/logs?id=<nonexistent>` returned 401 at 01:03 BST on
+> 2026-09-04. The same request returned `200 {"ok":true}` the previous day.
+> Every writer — Shortcuts, Back Tap, the app itself — was given its
+> credential first and confirmed logging afterwards.
 
-> **Every FND write endpoint is open, demonstrated not inferred.** With no
-> credential: `POST /api/quick {"steps":1}` → 200, entry present in the
-> record; `DELETE /api/logs?id=…` → 200, entry gone. Counts 612 → 613 → 612.
-> `proxy.ts` fails open exactly as designed, on an assumption that never
-> held. → §13.7 step 0b.
->
-> The earlier evidence — a 400 rather than a 401 — proved nothing. Bug
-> family (c): the instrument shared the assumption. See §7 practices.
+**`INTEGRATION_TOKEN` rather than `WIDGET_TOKEN` for the backup**, though
+the latter was already set. `WIDGET_TOKEN` lives on the phone; sharing it
+would mean revoking the backup also empties the home screen, and being
+revocable alone is the entire reason a credential exists. `[FND-chat
+2026-09-04]`
 
-**Why Phase A is safe** (§13.7 step 0b). `proxy.ts` reads `API_TOKEN` first
-and returns before touching any header, so while it is unset a request with
-a Bearer token and one without behave identically — both verified live.
-Every writer can therefore be given its header *before* the env var is set,
-at any pace, with nothing broken in between. `[FND-chat 2026-09-03]`
+**How it was closed, and why the order mattered.** `proxy.ts` reads
+`API_TOKEN` first and returns before touching any header, so while it was
+unset a request with a Bearer token and one without behaved identically.
+Every writer could therefore be given its header *before* the env var was
+set, at any pace, with nothing broken in between. Keep this in mind for any
+future gate: **the sequence that has no broken window is worth finding.**
 
-**The standalone-PWA trap** (§13.7 step 0b, Phase B). The manifest sets
-`"display": "standalone"`. On iOS an installed home-screen web app runs in a
-storage partition separate from Safari: cookies, Web Storage and IndexedDB
-are isolated, though the Service Worker registration and CacheStorage are
-shared. So setting the `fnd_key` cookie in Safari does not necessarily give
-the installed icon the cookie, and a standalone PWA has no address bar to
-type `?key=…` into. **The failure mode is silent:** Safari works, the icon
-stops logging. There is a documented one-time exception — iOS copies cookies
-across at the moment the app is added to the home screen — so the first
-remedy to try is: authorise in Safari, delete the icon, re-add it. If that
-fails, the fallback is a field in the app's own Settings; the FND chat must
-state before Phase B whether the pasted value is stored as a cookie or
-attached as a header. `[PROPOSED]`
+**The standalone-PWA trap, resolved.** The manifest sets
+`"display": "standalone"`, and on iOS an installed home-screen web app runs
+in a storage partition separate from Safari — cookies, Web Storage and
+IndexedDB isolated, Service Worker registration and CacheStorage shared. So
+authorising in Safari need not authorise the icon, and a standalone PWA has
+no address bar to type `?key=…` into. The app now has a Settings → Access
+field; the token becomes an httpOnly `fnd_key` cookie issued by the server.
+Verified by logging from the icon. Two remedies if it ever recurs: iOS
+copies cookies across once at the moment an app is added to the home screen,
+so delete and re-add; failing that, store the token in the app's own storage
+and attach it as a header. `[FND-chat 2026-09-04]`
 
 Do not gate `/api/logs` or `/api/biometrics`: the pages fetch them
 constantly, and a missing cookie on a new device mid-relapse would open the
@@ -401,9 +542,17 @@ the no-footprint auth probe work (§7 practices); when it is fixed the probe
 improves rather than disappears — 404 means the request passed the gate, 401
 means it did not.
 
-*v2.0 recorded a different canonical instance here — a backup script
-reporting "4 of 4" while copying nothing, "believed for months." It did not
-happen. See `DECISIONS.md` correction 18.*
+**The canonical instance, restored and corrected.** On its first scheduled
+run, the backup script announced `backed up 4 of 4 sources: 0 files` and
+exited 0 while launchd, lacking Full Disk Access, failed every single copy.
+Caught within minutes and fixed by counting real failures rather than
+assuming `cp` worked. **v2.0 wrapped this in "believed for months," which is
+false** — the script was a day old. v2.3 then deleted the whole instance on
+the strength of a check run against post-fix output. Both halves are now
+corrected: the instance is real, the disaster framing was fabricated. See
+`DECISIONS.md` 18 and 25. `[FND-chat 2026-09-04, contemporaneous comment at
+~/bin/backup-app-data.sh:235–242 plus the shape of the fix around it; the
+original log was truncated between runs and does not survive]`
 
 **(b) A value one part respects and another assumes.** Three different
 daily-budget numbers on one screen. Export ONE definition. `[FND]`
@@ -441,6 +590,78 @@ test in §2.1 exists because of this one. `[FND-chat]`
 `/api/export` was gated; it was not. The proposal was recorded as the
 outcome. Nothing is done until it is checked live. `[FND-chat]` This
 document is prone to it — see also correction 18.
+
+**(k) A correct system computing from a record that has silently lost
+something.** Every family above is about a derived number being wrong. This
+one is about the base being wrong while every derivation is right. On
+2026-09-04 a real 110 CLU chair session from 1 September was found missing
+from FND's live record — deleted the previous day while removing what looked
+like a duplicate. It was the bout the overheating reaction was attributed to
+and the one holding the budget cap up. Effect: 1 Sept load 175 → 75, cap
+88 → 38, attribution gone. **Nothing in the app noticed.** It surfaced only
+because a backup routine compared two copies, on the one day anyone was
+looking. `[FND-chat 2026-09-04]`
+
+The general shape: any system whose statistics derive from an append-only
+log inherits the log's omissions in silence, and no test of the derivation
+can catch it. Two mitigations shipped the same night, and the second is the
+interesting one: deleting an entry that carries a description **or** is
+≥40 CLU now confirms and names the entry, because two rows that look alike
+is exactly what went wrong and a generic "are you sure?" would not have
+stopped it; ordinary five-step walks still delete without asking,
+deliberately, because **a dialog he sees constantly is one he clicks through
+on the day it matters.** That is §6's friction principle used as a safety
+mechanism rather than a courtesy.
+
+**(l) A checker structurally unable to see a class of error, and silent
+about it.** `check-refs.py` passes on `[NEXT §8]`, a reference to a section
+of `NEXT-STEPS.md` that does not exist — it reads the `§8` as `SYSTEM.md`'s
+§8, which does. The reference is broken and the checker reports clean. This
+is (a) inside the tool built to catch (a). `[capture-chat 2026-09-04]` The
+general form: **a checker that cannot distinguish two cases will always
+report the one it can see.** Every guard in this system should state what it
+is blind to — §10's three §2.2 guards do; `check-refs.py` does not.
+
+**(m) A default nobody chose.** `temperature` was never set on the capture
+service, so every parse ran at the API default of 1.0 — full randomness.
+**Five prompt changes had already been made against output that was being
+sampled rather than computed.** Distinct from (d), where a constant survives
+the change that invalidated it: here nothing went stale, because nobody ever
+set it, so there was nothing to notice. `[capture-chat 2026-09-05]` The
+general form: **a default nobody chose looks exactly like a decision.**
+
+**(n) A failure path that destroys the evidence of the failure.** The backup
+fetched straight to its destination and ran `rm -f` on failure — so a failed
+14:00 run deleted good exports written at 01:31, and the error path removed
+the body that would have explained it. Two sessions produced two contradictory
+diagnoses and neither could check. **Failure was destructive, not merely
+unsuccessful.** Now: fetch to `.incoming`, `mv` only after validating, and
+keep the first 2KB of any failing response locally — local rather than iCloud,
+because an error page can carry a token. `[FND-chat 2026-09-05]`
+
+**(o) A green signal about the wrong artefact.** Three instances in one day.
+Production served two-day-old code because no Git repo was connected, while
+every local check passed and a 404 read as a broken build. A test suite passed
+on a working tree that did not contain the test — which failed immediately
+when restored. And a status code behind an auth gate was read as evidence of a
+deployment. **"The tests passed" is a claim about the tree they ran on, not
+about the commit.** `[ADHD-chat, capture-chat 2026-09-05]`
+
+**(p) A convention standing in for a guard.** Test files were meant to import
+a helper that redirects `DATA_DIR`; five of sixteen didn't, and a test run
+wrote to the real `data/` and destroyed the dev snapshot — 166 rows to 2. The
+storage adapter now refuses to write outside a temp directory during a test
+run. **A convention is not a guard; it is a hope with documentation.**
+`[ADHD-chat 2026-09-05]` Sub-finding worth its own line: TypeScript elides
+`import { x } from "./helpers"` when the binding is unused, so "import it for
+the side effect" silently does nothing. Use a bare `import "./helpers"`.
+
+**(q) A phrase acquiring his authority without having come from him.** A
+session labelled one of his priorities *"People and places"* and wrote a code
+comment presenting it as his words. He caught it. The fault is not the
+wording — it is a phrase gaining the weight of a quotation in files that are
+full of real quotations doing exactly that job. Same shape as correction 18,
+in a different medium. `[ADHD-chat 2026-09-05]` **Quote him or don't attribute.**
 
 ### Practices that worked `[FND §7]`
 
@@ -480,6 +701,42 @@ Two more, earned on 2026-09-03 and both about *how you check*:
   A 401 proves at least one of several accepted tokens is set, never which.
   `[FND-chat 2026-09-03]`
 
+Two more, from the night of 3–4 September:
+
+- **A diagnostic log worth quoting later must not be truncated between
+  runs.** The log holding `4 of 4 sources: 0 files` was deleted before the
+  next test to get clean output — reasonable at the time, and it cost the
+  only transcript of the instance §7(a) is built on. What survives is a
+  comment and the shape of the code around it. `[FND-chat 2026-09-04]`
+
+- **Append to a credential file with `>>`, never `>`.** A single `>`
+  truncates, silently removing whichever token was already there, and the
+  failure appears at the next scheduled run in a log nobody reads until
+  something is lost. Bug family (a) turning on one character. `[ADHD-chat
+  2026-09-04]` The credential file is `~/.config/app-backup/tokens.env`,
+  `chmod 600`, one line per app, outside both repos and outside iCloud.
+
+Four more, from 4–6 September:
+
+- **For "is it deployed", read the deployment list.** Exactly parallel to the
+  env-var practice above. A status code behind an auth gate is an inference
+  about deployment; `vercel ls` is the deployment. Two days of pushes deployed
+  nothing and an hour went into a theory never checked against the list.
+  `[ADHD-chat 2026-09-05]`
+- **Latency figures from different sessions are not comparable.** The cost of
+  constrained decoding was nearly recorded backwards by comparing yesterday's
+  number with today's. Back-to-back or not at all. `[capture-chat 2026-09-05]`
+- **Reproduce before blaming.** Three times a failure that looked like the
+  capture service's was the task app's, and once the reverse. Each was settled
+  by one call to the live service with the same input, so every report went to
+  the other session as a cause rather than a hypothesis. `[capture-chat]`
+- **A screenshot of the app being wrong is worth more than a test.** Every
+  finding in two days of capture work except the `temperature` default came
+  from Sean sending one. **The acceptance suite was green through several of
+  them.** `[capture-chat 2026-09-05]` This is worth stating as a limit rather
+  than a triumph: it means the cost of discovery currently sits on him, which
+  is the wrong place for it.
+
 ---
 
 ## 8. App register
@@ -511,10 +768,10 @@ design choice is ambiguous, this is the tiebreak. `[FND §1]`
 - **Stack:** Next.js 16.3, TypeScript, Tailwind 4, SWR, `node:test`, Redis /
   JSON behind a namespaced `StorageAdapter`. Next 16 deprecates
   `middleware.ts` for `proxy.ts`.
-- **Keys:** `adhd-tasks` · `adhd-events` · `adhd-comparisons` ·
-  `adhd-nudges` · `adhd-checkins` · `adhd-settings`.
-- **Endpoints:** `state` · `widget` · `quick` · `import` · `act` ·
-  `breakdown` · `order` · `review` · `calibrate` · `checkin` · `intention`.
+- **Keys and endpoints are not listed here.** Per §5.8: they live in code,
+  and a test fails if a store is added without `/api/export` reading it.
+  Both lists went stale twice in three days. Correction 12 with different
+  nouns. `[ADHD-chat 2026-09-05]`
 
 **How it decides — no LLM anywhere near this.** Importance (bands, set
 calmly) and inclination (forced-choice pairs, in the moment) measured
@@ -525,20 +782,67 @@ and — the stronger reason — **reproducible.** Gates before scoring, never
 as penalties. Two anchors a day. Anything started and unfinished outranks
 everything. `[NEXT §5]` `[ADHD-chat]`
 
-**Biggest known limitation:** rule-based voice capture cannot handle real
-dictation. A paragraph with five tasks, three deadlines and an instruction
-to modify an existing task produced one unusable task. `[NEXT §8]` → §10.
+**Voice capture is wired end to end** to the capture service on every path
+(§10). A dictated paragraph produces several tasks; modifications wait for a
+tap; the raw words are stored before the model is called; the fallback says
+which reader read it. **Two taps is the floor on iOS** — Safari has no Web
+Speech API, so the mic must be the keyboard's and the box has to be focused
+synchronously inside the tap. A Shortcut is the only route to one tap.
 
-### Routine — not built; deliberately the simplest app
+**Three mechanisms added 2026-09-05, all from his own documents.** *This
+week* rotates the work-slot priorities one week each — *"if everything's
+important right now, I do nothing; but if I rotate, I can do them"* —
+leaving treatment and social permanently unslotted. *Recovery* reads his
+Recovery Log as a grid and says when a column has gone quiet, never how long
+since he did anything. *Questions* asks two a day about what the app doesn't
+know, and skipping costs nothing.
 
-Kicks off the day, says *do this now*, then the next. Not a list. Fun
-icons. *"There's nothing about it that needs to be more than that."*
-`[SEAN]`
+### Routine — next to build; deliberately the simplest app
 
-`[PROPOSED]` Sequence anchored to **waking**, not clock time — he wakes at
-noon. Falling behind is not a failure state: a queue he advances, not a
-schedule he misses. Fun icons are a requirement, not decoration; fun is not
-inflated positivity.
+Says *do this now*, then the next. Not a list. Fun icons. *"There's nothing
+about it that needs to be more than that."* `[SEAN]`
+
+Sequence anchored to **waking**, not clock time — he wakes around noon.
+**It is a full-day sequence, not a morning one**, running from breakfast to
+the last thing at night. `[SEAN 2026-09-06]` Falling behind is not a failure
+state: a queue he advances, not a schedule he misses. Fun icons are a
+requirement, not decoration; fun is not inflated positivity.
+
+**The boundary with the task app, decided.** `[SEAN 2026-09-06]` **The
+routine app owns anything anchored to waking. The task app owns anything
+with a cadence longer than a day**, because those compete for attention and
+a routine has no ranking. Without this the two collide: "morning play" and
+"cook something properly" differ only in cadence, and he would be prompted
+twice by different apps. The routine app must not grow a general
+recurring-things feature.
+
+**The sequence, seven stages** `[SEAN 2026-09-06]`:
+
+1. Breakfast · Brush
+2. Read
+3. Day plan · Day-specific intentions · Plan exercise
+4. Morning play · Rehab · Meditate
+5. Gym · Cafe
+6. Rehab
+7. Oats & dishes · Bath · Teeth & medication · Floss
+
+Rehab appearing at stages 4 and 6 is deliberate, not a duplicate.
+
+**Stage 5 requires leaving the house and often will not happen.** A whole
+stage being skipped is normal — no red, no "missed", and it must not block
+stages 6 and 7.
+
+**The "not yet" list is stored but never shown as part of the sequence.**
+Held so he doesn't have to remember it, promoted one item at a time when the
+current sequence is holding. `[SEAN 2026-09-06]` Currently: supplements
+(fish oils, glucosamine, green mussel, creatine), Yoga 20 minutes, laundry,
+supplements (magnesium, B12).
+
+**Why this is a rule and not a preference.** The archive holds more than
+twenty full daily routines, none evidenced as running for a month
+(`operating-notes.md` items 1 and 3). A routine that starts with a third of
+its items unperformed begins every day in failure, which is the shape of all
+twenty. **Build what he does; promote from the store.**
 
 ### Health — not an app
 
@@ -637,7 +941,7 @@ See §12 Q1.
 
 ---
 
-## 10. Capture service — planned, build first
+## 10. Capture service — BUILT AND LIVE
 
 **Not a hub.** A stateless parser behind HTTP: text and a target schema go
 in, candidate structured items come out. It stores nothing. `[PROPOSED]`
@@ -663,10 +967,103 @@ in, candidate structured items come out. It stores nothing. `[PROPOSED]`
 - **Own repo, own deployment, own API key** — the key lives only here.
   **It authenticates its callers** with a bearer token checked *before* the
   model is called: it is the one component where being called costs money.
-- **Spend cap set in the Console at setup.** Model chosen by passing the
-  acceptance test — the `[NEXT §8]` dictation — starting from the smallest.
+- **Spend cap set in the Console at setup.**
 - **The key is never typed into a chat.** `.env.local`, Vercel env vars,
   and a password manager.
+
+### Built and live, 2026-09-04 to 2026-09-06
+
+`capture-three-lyart.vercel.app/api/parse`, private repo `seanscol/capture`,
+model **claude-haiku-4-5**. The ADHD app is wired to it on every capture
+path. Two real dictations exist as acceptance tests; a third would still be
+worth more than further tuning.
+
+**Corrections to what this section used to claim:**
+
+- **"Creations go to a confirm queue" is dropped.** Creations go straight in;
+  only modifications wait, always, naming the record. `[SEAN 2026-09-04]`
+  *"A wrongly created task is a line I delete. §2.2's 'corrupts everything
+  downstream' is an FND rule about load calculations and it doesn't transfer
+  to a task list. The queue puts friction exactly where I can least afford
+  it."* **§2.2 is intact; its consequence clause is FND-specific**, and that
+  clause was doing the work of justifying the queue.
+- **"Returns within a second or two" is measured and false.** 3.4–5.4s warm,
+  over 7s cold. Accepted rather than fixed: streaming would buy nothing
+  because he is waiting for a Shortcut to reply, not watching a screen.
+  `[SEAN]`
+- **The service fails closed** — the opposite of FND's `proxy.ts`, and
+  deliberately. What an unset variable would open here is a metered API key,
+  and nothing medical depends on it. §2.1: upward is earned.
+- **A modification's record is checked against the model's own description**,
+  not merely that the id is known. In production the model returned
+  `described_as: "Finish tax return"` beside the id of an unrelated task.
+  **The check belongs in the service**, which is the only place holding both
+  halves — the caller's id-to-label list and the model's description — so
+  every future caller inherits it rather than rediscovering it.
+- **Constrained decoding (`strict`) was shipped and removed.** It guarantees
+  the schema and runs generation at roughly a third of the rate, and the cost
+  scales with output: a six-item capture went 6.2s → 14.6s, past the calling
+  app's timeout, so it would have fallen back to keyword parsing every time.
+  Kept as a switch, defaulted off. A `["string","null"]` union on one field
+  cost ~5s a parse under strict, because constrained decoding holds both
+  branches open.
+
+**The pattern across every fix, and the reason to trust the result:** in
+every case the answer was a check in code, not a better instruction in the
+prompt. An instruction the model ignored two runs in three is not a guard.
+
+### What the build changed
+
+**"Start with the smallest and escalate" is falsified.** It assumes the
+ladder goes up. Measured against the acceptance dictation, the larger models
+were both **less accurate and slower**. The smallest is not a compromise
+here; it is the best option on both axes. Do not let another app inherit the
+assumption. `[capture-chat 2026-09-04]`
+
+**Always set `temperature` explicitly for structured extraction, and
+`strict: true` on the tool.** The API default is 1.0, so the same paragraph
+got a genuinely different reading call to call. Twelve runs of analysis and
+five prompt rewrites were spent diagnosing behaviour that was partly
+sampling noise. With `temperature: 0`, ten runs produced one identical
+decision-set. Separately, **`required` in a tool schema is a suggestion
+without `strict: true`** — one call omitted the `modified` key entirely, and
+an absent field is not "no changes," it is not answering, which nothing
+downstream can distinguish. `[capture-chat 2026-09-04]`
+
+**§2.2 is enforced structurally, not requested.** Grounding now sorts every
+field into **four origins**, each with a reason that is true: *grounded* (its
+own quote contains it), *borrowed* (another candidate quotes it — strip),
+*orphan* (nobody quotes it — keep and flag), *invented* (nowhere — strip).
+The two-origin version was the worst bug of the build: a deadline stated in a
+separate sentence read as unsupported and was stripped, **and the app then
+told him he hadn't said words he had said.** Two further guards, each with a
+stated blind spot: *coverage* catches text no candidate quoted, and is blind
+to a lossy item whose quote is complete; *grounding* removes any string
+field whose words don't appear in that candidate's own quote, and is blind
+to a claim inside a quote wider than the model used; *dropped-from-quote*
+catches a name or number in the quote the item never uses, and is blind to
+lost detail that is neither. Invented dates went from two runs in three to
+none. **The known hole:** when the model quotes a wider span than it used —
+quoting a whole retraction, then taking a date from inside it — the words
+are present and grounding sees nothing wrong. Recorded, not fixed; fixing it
+against one paragraph would be tuning to noise.
+
+**Outstanding:** five prompt rules were written before the temperature
+default was found, so they were tuned against randomised output. Some fixed
+real problems; some may be fitting noise. Strip them back one at a time
+against a deterministic baseline. `[capture-chat 2026-09-04]` And the
+service is proven against exactly one dictation, which is how a parser comes
+to handle one paragraph and generalise to none.
+
+**A constraint from §4A that the build does not yet honour.** The archive's
+most consistently demonstrated failure mode is breaking an unresolved thing
+into subtasks; the only passages in four years that resolve anything are
+long and unbulleted. This service converts speech into task lists whether or
+not a list is the right output for what was said. Nothing currently
+distinguishes *"five things to do"* from *"I am stuck on something."* Not a
+reason to withhold it — but a calling app should be able to receive
+*"this doesn't look like a task list"* as an answer, and cannot today.
+`[PROPOSED]`
 
 ---
 
@@ -779,20 +1176,66 @@ first:
 the headline and only Sean can fix it — a system service, no Full Disk
 Access grant, versioned, everything.
 
-**A targeted backup now runs and has been proven unattended.** Daily launchd
-job at 14:00, `~/bin/backup-app-data.sh`, covering both repos' `data/` and
-`.env.local` into dated iCloud folders, 14 kept. Log at
-`~/Library/Logs/backup-app-data.log`. Fails loudly, exits non-zero, no Full
-Disk Access required. The 14:00 run on 2026-09-03 fired unattended and
-reported `4 of 4`, exit 0 — the real proof, not a forced run. `[ADHD-chat
-2026-09-03]`
+**A targeted backup runs daily and now pulls the live record.** launchd job
+at 14:00, `~/bin/backup-app-data.sh`, into dated iCloud folders, 14 kept.
+Log at `~/Library/Logs/backup-app-data.log`. Fails loudly, exits non-zero,
+no Full Disk Access required.
 
-**Outstanding, and cheap: look inside the folder.** `4 of 4` is precisely the
-string correction 18 built a fabricated disaster around, and §7(a) is the
-family where a success message *is* the failure. Nobody has yet listed
-today's dated `AppBackups` folder and checked file count and sizes. One
-command. No suggestion anything is wrong — but this document has a named
-history of believing this specific message. `[PROPOSED]`
+**Until 2026-09-04 it backed up the wrong copy.** It copied each repo's
+`data/`, which is the development snapshot; production for both apps is
+Redis. FND's backup held 644 logs newest 2026-09-02 against 688 live; the
+ADHD app's held 551 preference judgements from 29 August against 633 live —
+82 forced-choice answers that are the ranking model's training set and
+cannot be reconstructed. The job had been reporting success daily and the
+report was honest. It was backing up a museum piece. **Bug family (h) in the
+backup itself.** `[ADHD-chat, FND-chat 2026-09-04]`
+
+**Now:** both apps expose `GET /api/export` and the job fetches it. FND uses
+`INTEGRATION_TOKEN`, ADHD uses `ACCESS_KEY`; both live in
+`~/.config/app-backup/tokens.env`, `chmod 600`, outside both repos and
+outside iCloud. `.env.local` is still copied because it genuinely exists
+nowhere else. The stale `data/` copies were removed rather than kept
+alongside — two files claiming to be the same record, one stale, is the bug
+being fixed and not a second line of defence.
+
+**A fetch must be able to fail.** A failed fetch still writes something — a
+401 body, an error page — and that something looks like a backup. So: fetch
+to a temp file; require HTTP 200; require valid JSON; require the expected
+array to be non-empty; and **require it to be no smaller than the last good
+backup.** Only then move it into place. The size check is the one that
+matters, because a half-written export arrives as valid JSON with fewer
+entries and reads as a real backup forever after. `[FND-chat 2026-09-04]`
+
+**Verified by reading the file, not the log:** 689 FND entries and 633 ADHD
+judgements after a `launchctl kickstart` run. Not 644 and 551.
+
+**Hardened 2026-09-05, after it failed unattended and then destroyed a good
+backup.** The 14:10 run on 09-04 failed both live fetches and the error path
+`rm -f`'d the exports written successfully at 01:31 — bug family (n). Five
+fixes: fetch to `.incoming` and `mv` only after validating, so failure can no
+longer take a good copy with it; `rc=$?` captured after each `curl`, because
+only the HTTP status was recorded and a DNS failure, a timeout and a disk-full
+write were indistinguishable; the first 2KB of any failing response kept
+locally at `~/Library/Logs/backup-app-data-last-failure.txt`; the shrink guard
+extended to the append-only stores together rather than one; and `~/bin` put
+under git and into `SOURCES`, so **the script that protects everything else is
+no longer the one thing protected by nothing.** `[FND-chat 2026-09-05]`
+
+`tasks` is guarded non-fatally, deliberately — it is not append-only, and a
+fatal guard would wedge the backup permanently after one deliberate deletion
+with no way out. The cost, stated so nobody rediscovers it: **a shrinking
+`tasks` store produces a log line nobody has to act on**, which is §7(a)'s
+shape, and it will be read on the day something is lost and not before.
+
+**The "proven unattended" claim in v2.3 was true when written and did not
+cover what it was cited for** — the 09-03 run predates the live-export feature
+and proves file copying only. Bug family (d) applied to evidence rather than a
+constant. `[capture-chat 2026-09-05]`
+
+**This backup is what found the deleted bout** — see §7(k). Comparing the
+old snapshot against the new export turned up two entries present in the
+snapshot and absent from production. That was not what the comparison was
+for.
 
 *Operational:* a background job cannot modify directories created by an
 interactive shell in iCloud Drive. **Only ever trigger it via `launchctl
@@ -817,6 +1260,23 @@ move the data out of protected directories instead. If a folder moves:
 `mv`, never re-clone.
 
 **13.2 One session per repo at a time.** Parallel across repos is fine.
+
+**Breached twice on 2026-09-04, harmlessly, which is luck.** An FND session
+committed twice into `adhd-tasks` while an ADHD session was live there;
+nothing collided because the changes stayed out of `src/`. Both sessions
+flagged it unprompted, neither hid it. **A third breach on 09-05:** the
+capture session appended tests to `adhd-tasks` while that repo's own session
+had twelve modified files open. Caught by checking `git status` before going
+further; the change was backed out and nothing was lost.
+
+**§13.8 gives four rules hooks and this is not one of them.** A `SessionStart`
+or `PreToolUse` check for *"am I editing a repo whose working tree is dirty
+with someone else's work"* would have stopped it, and is the obvious fifth
+hook. `[capture-chat 2026-09-05]` `[PROPOSED]` **The gap the rule doesn't cover:** it
+says one session per repo, and says nothing about a session in one repo
+reaching into another — which is what actually happened, and is the harder
+case, since the session doing the reaching is by definition not the one
+holding that repo. Left open rather than patched. `[PROPOSED]`
 
 **13.3 Every repo has a `CLAUDE.md`** with §2 and §3 inline plus a pointer
 here. Inline, because a pointer alone gets skipped.
@@ -873,14 +1333,18 @@ weakens it — it is the *editing* that forks, not the checking.
     **0b outranks 0.** An open write endpoint on a live medical record is an
     active exposure; no whole-machine backup is a latent one. Recorded here
     per this section's closing line. `[SEAN 2026-09-03]`
-1. **Spec files into the repos.** `DECISIONS.md`, `CLAUDE.md` and
-   `check-refs.py` alongside `SYSTEM.md` in `~/Projects/ecosystem/` and in
-   both app repos. Until this lands, §13.6 instructs a step that cannot be
+1. **Spec files into the repos.** **The canonical list of what a repo holds
+   lives in `NEXT-STEPS.md` and is not repeated here** — it was maintained in
+   two places and drifted within a week, which is §5.8 applied to a file list.
+   `spec_copies()` discovers repos rather than enumerating them, which is how
+   a fourth repo was found still on v2.3. Until this lands, §13.6 instructs a step that cannot be
    complied with. Fold in §13.8's hooks in the same session.
-2. **Capture service.** Own repo, own session (§10). Acceptance test
-   written first. Deploy only when it passes.
-3. **Wire the ADHD app to it.** Separate session, with fallback.
-4. **Routine app.** First app on the shared package.
+2. ~~**Capture service.**~~ **Done** — live, wired, two real acceptance
+   dictations (§10).
+3. ~~**Wire the ADHD app to it.**~~ **Done** — every capture path, not just
+   the one the contract names (§5.4).
+4. **Routine app — next.** First app on the shared package. Boundary with
+   the task app decided; sequence in §8.
 5. **Media.**
 6. **Global** — last of the integrated apps; daily synthesis only, then
    arbitration later. **D3 and Q2 are decided here**, not before.
@@ -891,47 +1355,94 @@ Move a step only for a reason recorded in `DECISIONS.md`.
 
 ---
 
-**13.8 Enforcement rather than instruction** `[PROPOSED]`
+**13.8 Enforcement rather than instruction** — built 2026-09-04
 
-Several rules in this document are currently requests a session may skip.
-Claude Code **hooks** are shell commands run at fixed points in its
-lifecycle, which makes an action always happen rather than depending on the
-model choosing to run it. Four of this document's rules map straight onto
-them. Land them with §13.7 step 1, in `.claude/settings.json`, which is
-committed with the repo the way `CLAUDE.md` is.
+Several rules in this document used to be requests a session could skip.
+Claude Code **hooks** are shell commands run at fixed points in a session's
+lifecycle, so the action always happens rather than depending on the model
+choosing to run it. Four are now installed in both app repos, in
+`.claude/settings.json`, committed with the repo the way `CLAUDE.md` is.
 
-| Rule | Hook |
-|---|---|
-| §13.6 one writer | `PreToolUse` on `Edit`/`Write` → block `SYSTEM.md` and `DECISIONS.md` |
-| §7 no production-write diagnostics | `PreToolUse` on `Bash` → block `POST`/`DELETE` against the FND production URL |
-| §13.6 run `check-refs.py` | `Stop` → run it every turn |
-| §13.3 rules get skipped | `SessionStart` → inject §2 and §3 |
+| Rule enforced | Hook | Verified |
+|---|---|---|
+| §13.6 one writer | `PreToolUse` on `Edit`/`Write` → block the spec files | **Fired live.** Blocked a real write; file not created, md5 unchanged |
+| §7 no production-write diagnostics; §13.6 one writer | `PreToolUse` on `Bash` → block production `POST`/`DELETE`, and writes to the spec files by any shell verb | **Fired live, five times**, three unplanned. One genuine false positive found and fixed |
+| §13.6 run `check-refs.py`; copies must not drift | `Stop` → run it, plus compare every `SYSTEM.md` copy against the ecosystem original and `CLAUDE.md`'s §2/§3 against `SYSTEM.md`'s | Script proven across four scenarios. **Wiring unproven** — silent by design, so it will first speak when something is genuinely wrong |
+| §13.3 rules get skipped | `SessionStart` → inject §2 and §3, sliced live from `SYSTEM.md` | **Confirmed** by a session in the other repo listing all seven unprompted |
 
 Why a hook and not a permission rule: `PreToolUse` hooks fire before any
 permission-mode check and a hook returning deny blocks the tool even under
 `--dangerously-skip-permissions`, so no session can reason its way past one.
-Deny rules, by contrast, have repeated public reports of not being enforced;
-treat any deny rule as unverified until tested. Sean runs the **desktop app**
-`[SEAN 2026-09-03]`, where these are available.
+Deny rules have repeated public reports of not being enforced; treat any deny
+rule as unverified until tested.
 
-**A weekly audit task, after step 1** `[PROPOSED]`. Claude Code Desktop can
+**Four things the build taught, each of which nearly shipped wrong:**
+
+**The polite door is not the only door.** The first hook blocked `Edit` and
+`Write` and not `Bash` — so `cat > SYSTEM.md`, `sed -i`, `cp` all walked
+straight past it. A rule enforced against the tools a session normally uses,
+with the shell wide open, is a suggestion. `[FND-chat 2026-09-04]`
+
+**A blocking check can trap the session.** `check-refs.py` exits non-zero
+when it finds a problem; a `Stop` hook that blocks on failure means the
+session cannot stop, runs again, fails again. The hook reports and never
+blocks. A session you must force-quit is worse than a check you must read.
+`[FND-chat 2026-09-04]`
+
+**Enforcement can block its own remedy.** The Bash hook blocked `cp` to
+`SYSTEM.md` — including the copy that installs the *next* version. §13.6
+says the planning chat copies the result out to every repo, but a chat
+cannot write to disk, so a code session must run that copy. The fix is not
+to weaken the hook but to encode the direction of authority: **a copy whose
+source is `~/Projects/ecosystem/` is allowed; every other direction and
+every other verb is not.** `[FND-chat 2026-09-04]`
+
+**Bug family (c) twice, in the hook meant to prevent bad checks.** The
+false-positive fix matched verb and filename across newlines, so prose
+mentioning `cp` and `SYSTEM.md` twenty lines apart read as one command. And
+the direction-aware allowance passed its unit test, then was blocked the
+first time it ran for real: the test handed the hook `cwd=ecosystem`, while
+the actual command is `cd ~/Projects/ecosystem && cp …` with the `cd`
+*inside* the command. Both caught by running it live rather than trusting a
+green suite. 22 cases now pass in both repos — **ten of which assert
+something must be allowed**, because a hook that denies everything passes no
+test worth having. `[FND-chat 2026-09-04]`
+
+**A remaining tension, not resolved:** §2 and §3 now exist twice per session
+— inline in `CLAUDE.md` per §13.3, and injected live from `SYSTEM.md` by the
+hook. Update `SYSTEM.md` without regenerating `CLAUDE.md` and a session sees
+both versions. That is bug family (b) — a value one part respects and
+another assumes — created by two rules that each make sense alone. The
+`Stop` hook's drift check is what catches it; before that check existed,
+nothing would have. `[FND-chat 2026-09-04]`
+
+**A weekly audit task** `[PROPOSED]`, still unbuilt. Claude Code Desktop can
 run a local scheduled task with access to the repos. Read-only, working
-folder `~/Projects/ecosystem`: run `check-refs.py`; confirm the `SYSTEM.md`
-in both repos is identical to the ecosystem copy; check new `[FND-chat]` and
-`[ADHD-chat]` claims against the repos; hit **only** FND's already-gated
-read routes to confirm the gates hold — never `quick`, never `logs`, never a
-write. Writes findings to `AUDIT.md`; never touches `SYSTEM.md` or
-`DECISIONS.md`; **says nothing when everything matches.**
+folder `~/Projects/ecosystem`: run `check-refs.py`; confirm every
+`SYSTEM.md` copy matches the ecosystem original; check new `[FND-chat]` and
+`[ADHD-chat]` claims against the repos; **confirm production is running the
+current commit** (one call, and it would have caught two days of pushes
+deploying nothing); hit **only** FND's already-gated
+read routes — never `quick`, never `logs`, never a write. Writes findings to
+`AUDIT.md`; never touches `SYSTEM.md` or `DECISIONS.md`; **says nothing when
+everything matches.** Much of the drift-detection half now lives in the
+`Stop` hook instead, which runs more often and costs nothing.
 
 Two constraints on the whole idea, both from this document. **Detection can
 be automated; writing cannot** — every entry in `DECISIONS.md` Part 2 is a
 chat that recorded a report without checking it, and an unattended writer is
 that failure with the human removed (§13.4, §13.6). And **a daily digest
 would fail §9's own test** — it must replace checking, not add to it, and §4
-says what happens to anything needing upkeep. A checker that is silent when
-correct passes; one that reports every day does not.
+says what happens to anything needing upkeep. A checker silent when correct
+passes; one that reports every day does not.
 
 **What this cannot do:** hooks catch *process* failures — a skipped check, an
 unrecorded decision, an unauthorised edit. They cannot catch a coding bug in
 one app affecting another. That is handled by §2A.1 and §2A.2 making the
 interaction impossible, and no monitoring layer improves on it.
+
+**What it did do, on its first night:** the session that had written a
+fabricated entry into the production health record said of the Bash hook,
+unprompted, *"it would have stopped me planting that test entry in your
+production record earlier tonight."* That morning it was a sentence in a
+document. `[FND-chat 2026-09-04]`

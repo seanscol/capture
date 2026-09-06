@@ -13,7 +13,19 @@ That is obvious on sight. It is the one pointing at a number that still exists
 and now means something else, which reads perfectly and is wrong. A person
 proofreading cannot catch those; this can, completely.
 
-Usage:  python3 check-refs.py [path/to/SYSTEM.md]
+A second document, operating-notes.md, refers into this one: §2.6, §4, §9,
+§10, §12 D3/Q2. Those references went unchecked because this script was only
+ever run against SYSTEM.md — and checking that file against itself would have
+been worse than not checking it. operating-notes.md has its own `## 4.` and
+`## 9.` and `## 10.` headings, so three of its five references would resolve
+against the wrong document, read perfectly, and pass. That is precisely the
+failure described above. Hence --defs: references are checked against the
+definitions of the document they point into, which for operating-notes.md is
+always SYSTEM.md. It uses "item N" for its own sections and reserves § for
+SYSTEM.md, and this makes that convention enforceable rather than merely
+observed.
+
+Usage:  python3 check-refs.py [path/to/SYSTEM.md] [--defs path/to/SYSTEM.md]
 Exit:   0 clean, 1 problems found.
 """
 import re
@@ -45,9 +57,15 @@ def parse(text):
     return sections, rules, dq
 
 
-def check(path):
+def check(path, defs_path=None):
+    """Check every reference in `path` against what `defs_path` defines.
+
+    Default: the document defines its own targets, which is right for
+    SYSTEM.md and wrong for anything that refers into it.
+    """
     text = Path(path).read_text()
-    sections, rules, dq = parse(text)
+    defs_path = defs_path or path
+    sections, rules, dq = parse(Path(defs_path).read_text())
     problems = []
 
     def quoted(line, token):
@@ -81,7 +99,9 @@ def check(path):
             problems.append((num, f"a count in prose ({m.group(0)}) — §5.8 says constants live in code", line.strip()))
 
     print(f"{path}")
-    print(f"  sections {len(sections)}  rules {len(rules)}  decisions/questions {len(dq)}")
+    against = "" if Path(defs_path) == Path(path) else f"  (defined in {defs_path})"
+    print(f"  sections {len(sections)}  rules {len(rules)}  "
+          f"decisions/questions {len(dq)}{against}")
     if not problems:
         print("  OK — every reference resolves, no counts in prose.")
         return 0
@@ -98,8 +118,23 @@ def check(path):
 
 
 if __name__ == "__main__":
-    target = sys.argv[1] if len(sys.argv) > 1 else "SYSTEM.md"
-    if not Path(target).exists():
-        print(f"not found: {target}", file=sys.stderr)
-        sys.exit(2)
-    sys.exit(check(target))
+    args = sys.argv[1:]
+    defs = None
+    if "--defs" in args:
+        i = args.index("--defs")
+        if i + 1 >= len(args):
+            print("--defs needs a path", file=sys.stderr)
+            sys.exit(2)
+        defs = args[i + 1]
+        args = args[:i] + args[i + 2:]
+
+    target = args[0] if args else "SYSTEM.md"
+    # A missing definitions file is not a clean run (§2.1): with no targets to
+    # resolve against, every reference in the document would be reported
+    # broken, which reads as the document being wrong rather than the check
+    # being unable to run.
+    for label, p in (("", target), ("--defs ", defs)):
+        if p and not Path(p).exists():
+            print(f"not found: {label}{p}", file=sys.stderr)
+            sys.exit(2)
+    sys.exit(check(target, defs))

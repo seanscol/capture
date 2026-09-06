@@ -32,8 +32,22 @@ import sys
 from pathlib import Path
 
 FND_HOST = "fnd-tracker.vercel.app"
-SPECS = r"(?:SYSTEM|DECISIONS)\.md"
-ECOSYSTEM = Path.home() / "Projects" / "ecosystem"
+
+# Which files are spec files is defined once, in _spec.py. This hook used to
+# spell them out in a regex of its own, so operating-notes.md — part of the
+# spec under §4A — walked through the side door this hook exists to shut.
+sys.path.insert(0, str(Path(__file__).parent))
+try:
+    import _spec
+    SPECS = "(?:" + "|".join(re.escape(n) for n in sorted(_spec.PROTECTED)) + ")"
+    ECOSYSTEM = _spec.ECOSYSTEM
+except Exception:  # noqa: BLE001 — any import failure, not just ImportError
+    # Degraded: guard a deliberately broader shape — any markdown file — rather
+    # than keep a second copy of the list. A stale duplicate under-blocks and a
+    # broad pattern over-blocks, and only one of those two errors is safe. The
+    # §13.6 copy out of ecosystem stays allowed, so the remedy is still open.
+    SPECS = r"[^\s/]*\.md"
+    ECOSYSTEM = Path.home() / "Projects" / "ecosystem"
 
 WRITE_METHOD = re.compile(
     r"-X\s*(?:POST|PUT|PATCH|DELETE)\b"
@@ -143,7 +157,7 @@ for segment in SEGMENT.split(cmd):
     if SPEC_WRITE.search(segment) and not sanctioned_copy(segment, cwd):
         sys.stderr.write(
             "BLOCKED by §13.6 (one writer to the spec files): this command writes "
-            "to SYSTEM.md or DECISIONS.md through the shell.\n\n"
+            "to a spec file through the shell.\n\n"
             "The Edit/Write hook guards those files; this one guards the same rule "
             "against redirects, sed -i, cp, mv, tee and rm, because a rule "
             "enforced against one door only is a suggestion.\n\n"

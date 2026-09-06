@@ -81,6 +81,28 @@ synthesis*, not a health tab; blood-test entry and manic history need a
 home (→ Q9); MacroFactor's import stays by Sean's decision, conditional on
 the synthesis actually consuming it.
 
+### §5.5 and the backup script: exception, not amendment
+**Sean, 2026-09-04:** *"let's go with the exception."*
+
+The backup script now reads both apps' `/api/export` daily, making it a
+second thing reading across — which §5.5 reserves for the global app. Both
+code chats raised this independently and **neither reinterpreted the rule on
+its own authority**, which is the behaviour the rule exists to produce.
+
+Two options were put: amend §5.5 to admit "operational tooling, read-only,
+with its own revocable credential," or record a named exception. The
+argument for the exception, and the one Sean took: this document's history is
+that broad categories get abused and specific instances don't — corrections
+1, 7 and 8 are all rules quietly widened or narrowed — and §13.8's audit task
+will be the second case wanting the same permission. Two instances tell you
+what the category actually is; one tells you nothing. Deciding again when the
+second arrives is the point, not the cost.
+
+What makes it defensible either way: the script reads only, and holds its own
+credential — `INTEGRATION_TOKEN` for FND, chosen over the already-set
+`WIDGET_TOKEN` precisely so that revoking the backup does not empty the
+phone.
+
 ### Build order: capture before routine
 Claude first placed routine before capture, on the reasoning that a small
 visible app should come before infrastructure. Sean pushed back
@@ -222,23 +244,53 @@ the live check is the environment list, not a status code — a 401 proves at
 least one accepted token is set, never which. And it hid something worse —
 see 19.
 
-### 18. A bug-family instance that did not happen
+### 18. A real instance wrapped in a fabricated consequence — then wrongly deleted entirely
 **v2.0 §7(a) said:** canonical instance — a backup script reporting "4 of 4
 sources" and exiting 0 having copied nothing, *believed for months,
 discovered when needed.*
-**Reality:** no script ever reported "4 of 4" while copying nothing; the
-real output was `BACKUP FAILED — 2 of 4`, exit non-zero — i.e. the bug
-family being *avoided*. And nothing could have been "believed for months":
-the script was a day old.
-**How it got there:** a chat described a bug in a first draft and added a
-counterfactual — "you'd have believed it was running for months." The
-planning chat turned a caught-in-development bug plus a counterfactual into
-a narrative of a disaster and wrote it as fact. That is the planning chat's
-error, whatever the underlying report said.
-**Caught by:** FND chat — *because* it was tagged `[FND-chat]` and could be
-taken back and checked. A provenance tag is a checkable claim (§0).
-**Replaced with:** two real instances — the export button's `res.blob()`
-without `res.ok`, and quiet-day-reads-as-clean.
+**v2.3 said:** it did not happen at all; the real output was
+`BACKUP FAILED — 2 of 4`, exit non-zero.
+**What is actually true, established 2026-09-04.** Both outputs are real and
+they are consecutive runs either side of a fix. On its **first scheduled
+run**, launchd lacking Full Disk Access, every copy failed and the script
+printed `backed up 4 of 4 sources: 0 files` and exited 0. It was then fixed
+to count real failures; the next run printed `BACKUP FAILED — 0 of 4`, and a
+later one `BACKUP FAILED — 2 of 4`, both exit non-zero. v2.3's check was run
+against the post-fix output and used it to deny the pre-fix output.
+**So:** the instance is real. *"Believed for months"* is false — the script
+was a day old and it was caught within minutes. That half was a chat's
+counterfactual which the planning chat wrote up as narrated history, and it
+remains the planning chat's error.
+**Evidence:** a contemporaneous comment at `~/bin/backup-app-data.sh:235–242`
+describing the failure in the past tense, written in the same edit as the
+fix, plus the presence of that fix — the `failed` counter, the zero-files
+check, the non-zero exit — in the same file. **Weaknesses, named by the
+source:** `~/bin` is not version-controlled so there is no commit timestamp,
+and the original log was truncated between test runs and does not survive.
+Enough to establish the instance; not a transcript.
+**Caught by:** FND chat both times — *because* it was tagged `[FND-chat]`
+and could be taken back and checked. A provenance tag is a checkable claim
+(§0). See 25 for how the second check went wrong.
+
+### 25. The check that disproved 18 shared the assumption it was testing
+Correction 18's v2.3 form concluded the instance never happened, on the
+strength of an output reading `BACKUP FAILED — 2 of 4`. That output is from
+**after** the fix. Asking a fixed script whether the bug ever existed is bug
+family (c) — verification sharing the bug's assumption — committed inside the
+corrections log, in an entry whose whole subject is a claim recorded without
+checking.
+**The planning chat then asserted it as settled**, twice, telling Sean flatly
+that the instance was fabricated and instructing him to correct a code
+session that had it right. Correction 20's shape again: an unchecked
+assertion reads exactly like a checked one, and citing a document is not
+checking when the document is what is in question.
+**What recovered it:** the FND chat produced the contemporaneous comment and
+named its own evidential weaknesses unprompted. Correction 18's own
+conclusion — that a provenance tag is a checkable claim — is what made the
+recovery possible. The tag worked. The check was aimed one step too late.
+**The practice that falls out of it:** when checking whether a bug existed,
+check the state *before* the fix, or say you cannot. And §7 now carries: a
+diagnostic log worth quoting later must not be truncated between runs.
 
 ### 19. `API_TOKEN` never set — every FND write endpoint open
 Not a documentation error but the most important finding of the day.
@@ -373,6 +425,142 @@ chat because it was the only consequence touching a rule.
 
 ## Part 4 — Changelog
 
+**2.8 — 2026-09-06.** The first version since v2.3 to reach the repos.
+
+- **v2.4–v2.7 were written and never copied out.** Every session spent two
+  days auditing against a four-version-old spec and reporting staleness that
+  had already been fixed — §5.6's token table, §8's lists, §10's confirm
+  queue. **Same failure as the four undeployed commits in the task app, in
+  the same week, by the chat that wrote the rule about it.** Bug family (o):
+  a green signal about the wrong artefact, applied to documents.
+- **Five new bug families.** (m) a default nobody chose — `temperature`
+  unset, five prompt changes made against sampled output. (n) a failure path
+  that destroys the evidence of the failure — the backup's `rm -f` deleted a
+  good copy and the body that would have explained it. (o) a green signal
+  about the wrong artefact, three instances in one day. (p) a convention
+  standing in for a guard — a test run destroyed the dev snapshot. (q) a
+  phrase acquiring his authority without having come from him.
+- **Four new practices:** for "is it deployed", read the deployment list;
+  latency figures from different sessions are not comparable; reproduce
+  before blaming; a screenshot of the app being wrong is worth more than a
+  test — stated as a limit, because it puts the cost of discovery on him.
+- **§10 rewritten from the shipped service.** Confirm queue dropped for
+  creations `[SEAN]`; latency measured and accepted; fails closed; checks a
+  modification's record against the model's own description; `strict`
+  shipped and removed at a third of the generation rate. **In every case the
+  fix was a check in code, not a better instruction in the prompt.**
+- **§8's ADHD key and endpoint lists deleted** rather than updated, per
+  §5.8. They went stale twice in three days.
+- **The routine app is specified** — full-day sequence, seven stages, the
+  waking/cadence boundary with the task app, and a stored "not yet" list
+  that is never shown as part of the sequence. `[SEAN 2026-09-06]`
+- **A link is not a read** (§5.5). The routine app opening the task app's
+  `/week` in a browser needs no exception.
+
+**2.7 — 2026-09-04.** A constraint on this document's own growth.
+
+- **The two archive findings Sean names as outranking the rest** are now at
+  the head of `SYSTEM.md` and `operating-notes.md`: he remembers the
+  architecture of a life better than living it, and nothing gets completed.
+- **The spec may grow only in a version where something shipped. It may
+  shrink at any time.** Written because designing this system is the pattern
+  it describes: v2.2 → v2.6 in twenty-four hours, roughly doubling in
+  length, with one component shipped. `[SEAN 2026-09-04]`
+- **Corollary:** when the choice is between recording something and building
+  something, build. The exception is retrieval — `operating-notes.md` item 2
+  — which is a low bar most additions do not clear.
+
+**2.6 — 2026-09-04.** Personal content stripped from the spec.
+
+- **§4 rewritten as structural constraints only.** Diagnoses, clinical
+  description and history removed. What survives is the six facts that each
+  constrain a design decision — upkeep gets abandoned, capacity is
+  unpredictable, exertion has delayed non-proportional consequences,
+  work is open-ended, night-shifted hence the 05:00 boundary, iOS and
+  dictation. Clinical detail for the FND tracker lives in that app's repo,
+  where it is load-bearing.
+- **`operating-notes-psychology.md` → `operating-notes.md`**, rewritten
+  content-free. The source analysis used biography as evidence —
+  bereavement, illness, relationships, named people — and none survives. All
+  eleven structural findings and their line citations do.
+- **The reason, in Sean's words:** *"the lessons are structural, not
+  content… I don't want any random salience misjudgment to generate from
+  nowhere some intimate detail and make that into a rule for coding."*
+  `[SEAN 2026-09-04]` **This is now the test for anything added to §4 or
+  §4A:** does it constrain a design decision, or is it merely true?
+- **Left standing, and flagged for a decision:** §12 D3/Q2 and Q9 still name
+  a phase and a health-data type, because they are design decisions *about*
+  those things and removing the words would make them incoherent. Different
+  category from biography; still Sean's call.
+
+**2.5 — 2026-09-04.** The archive arrives, and the capture service ships.
+
+- **§4A added**, pointing at `operating-notes-psychology.md` — eleven
+  regularities derived from 137,000 words of Sean's 2023–2026 archive, each
+  with a line citation, agreed by him. `[SEAN]` Six change what gets built:
+  a completion channel and decay are missing and their absence is the
+  archive's most consistent finding; asterisks are the priority signal and
+  frequency is the anxiety signal; every surface should bias toward the past
+  tense; breaking an unresolved thing into subtasks is the most consistently
+  demonstrated failure mode; plan size should be tracked as a number and
+  shown back (his own idea); and there is no second person, so the right
+  output of that pattern is a task with a name on it.
+- **The meta-risk is named in the spec.** The archive holds more than twenty
+  full daily routines in four years, identical in shape, none evidenced as
+  running a month. This system is structurally the twenty-first. The test
+  that distinguishes it: **every previous system recorded what he intended;
+  this one has to record what happened.**
+- **§10 rewritten from the built service.** *"Start with the smallest and
+  escalate"* is falsified — larger models were less accurate *and* slower.
+  Always set `temperature` explicitly and `strict: true` on the tool; the
+  API default of 1.0 meant twelve runs of analysis partly diagnosed sampling
+  noise. §2.2 is now enforced by three guards, each stating its blind spot.
+- **§7(l) added** — a checker structurally unable to see a class of error,
+  and silent about it. `check-refs.py` passes on `[NEXT §8]` because it
+  reads that reference as `SYSTEM.md`'s §8. Bug family (a) inside the tool
+  built to catch (a).
+- **Step 4 done**, 10 of 10 on the acceptance dictation after
+  `temperature: 0`. Flagged by the building session and worth keeping
+  visible: five prompt rules were tuned against randomised output and may be
+  fitting noise.
+
+**2.4 — 2026-09-04.** The night steps 0b, 1 and 2 all landed, plus the
+backup fix and one real incident found by accident.
+
+- **Step 0b done.** Every FND write endpoint now gated; an unauthenticated
+  `DELETE` returns 401, verified 01:03 BST. `API_TOKEN` and
+  `INTEGRATION_TOKEN` set. The two-phase order worked exactly as designed —
+  every writer got its header first, nothing broke in between, and the
+  standalone-PWA trap resolved via a Settings → Access field, confirmed by
+  logging from the icon rather than Safari.
+- **The backup was protecting a museum piece.** It copied each repo's
+  `data/`; production for both apps is Redis. 44 FND entries and two days
+  missing; 82 ADHD judgements missing, being the ranking model's training
+  set. Both now fetch `/api/export`. Bug family (h) in the backup itself.
+  §13.1 rewritten. Verified by reading the file: 689 and 633.
+- **New bug family (k)** — a correct system computing from a record that has
+  silently lost something. A real 110 CLU bout from 1 September had been
+  deleted while removing a duplicate; 1 Sept load read 75 instead of 175 and
+  the cap 38 instead of 88. Nothing in the app noticed. It surfaced only
+  because the backup fix compared two copies. Restored.
+- **Corrections 18 and 25.** The `4 of 4 / 0 files` instance is real after
+  all; only *"believed for months"* was fabricated. v2.3 deleted it on the
+  strength of a check run against post-fix output — bug family (c) inside the
+  corrections log, then asserted as settled by the planning chat.
+- **§13.8 rewritten from what was built**, not proposed. Four hooks live in
+  both repos; two fired live, one confirmed from another session, one silent
+  by design. Four lessons recorded, each of which nearly shipped wrong — the
+  polite door, the blocking check, enforcement blocking its own remedy, and
+  bug family (c) twice inside the hook meant to prevent bad checks.
+- **§5.5 gains a named exception** for the backup script `[SEAN]`, rather
+  than an amendment admitting "operational tooling."
+- **§13.2 breached twice, harmlessly**, and the gap named: the rule says
+  nothing about a session in one repo reaching into another.
+- **§8** gains the ADHD app's `/api/export`, which the repo had and the spec
+  didn't.
+- Two practices added to §7: don't truncate a diagnostic log between runs;
+  append to a credential file with `>>`, never `>`.
+
 **2.3 — 2026-09-03.** A day of live verification, three new corrections
 (22–24), and two structural decisions.
 
@@ -408,8 +596,10 @@ chat because it was the only consequence touching a rule.
 - **Constants dropped** from §6 (six hex values) and §8 (CLU bands,
   half-life) per §5.8. The colours still matched — bug family (d) caught
   before firing, which is why it was free to fix.
-- **§4 lithium confirmed directly** `[SEAN]`, because the saved claude.ai
-  profile asserted the opposite and sessions read both.
+- **§4 medication status confirmed directly** `[SEAN]`, because the saved
+  claude.ai profile asserted the opposite and sessions read both. *(Removed
+  again in v2.6 — see below. It resolved a contradiction rather than
+  constraining a design.)*
 - **Status moved out of `SYSTEM.md`.** `NEXT-STEPS.md` is the only file that
   says done or not-done; three files disagreed within a day of v2.2.
 - Outstanding and cheap: nobody has looked *inside* the backup folder. `4 of
