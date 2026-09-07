@@ -1,11 +1,36 @@
 #!/usr/bin/env python3
 """Stop — §13.6 run check-refs.py, plus the drift checks §13.6 implies.
 
-Three findings, one message:
+**Version 1.0 · 2026-09-08** — the merge of three copies. fnd-tracker held
+checks 1 and 2, routine generalised check 3 to every repo and added the
+tooling comparison, adhd-tasks added the @import check. Checks 1 and 2 were
+byte-identical in all four repos, so only the additions had to be chosen
+between, and none of them conflicted.
+
+Five findings, one message:
 
   1. check-refs.py against every spec file in this repo.
   2. Every copy of them under ~/Projects agrees with the ecosystem copy.
-  3. This repo's CLAUDE.md still carries §2 and §3 verbatim.
+  3. Every repo's CLAUDE.md still carries §2 and §3 verbatim.
+  4. The TOOLING on the same canonical list agrees across every app repo —
+     check-refs.py, .claude/settings.json, and every hook script.
+  5. Every @import in every repo's CLAUDE.md resolves to a file that exists.
+
+Checks 3, 4 and 5 all look at every repo rather than only the one the session
+is standing in, and that is the through-line rather than a coincidence. Nearly
+everything found in the week to 2026-09-08 was invisible for the same reason:
+ecosystem's check-refs.py two versions behind since 09-05, three versions of
+_spec.py, capture left on v2.3, a dangling @AGENTS.md. None of it was in
+anybody's way. `[SEAN 2026-09-08]`
+
+(4) was added 2026-09-06 because (2) watched the documents and nothing watched
+the tools. NEXT-STEPS.md's canonical list names six things a repo holds; two of
+them were unguarded, and one of those had already drifted: ecosystem's
+check-refs.py was two versions behind all three app repos, so the --defs call
+this very hook makes was being silently ignored, and operating-notes.md was
+being checked against itself and passing. Found by accident. The rule it broke
+is the one the check exists to serve: a check that cannot run is not a check
+that passed.
 
 (1) and (2) used to mean SYSTEM.md alone. operating-notes.md is part of the
 spec under §4A, refers into SYSTEM.md five times, and no guard knew it
@@ -166,30 +191,140 @@ for name in _spec.VERSIONED:
             "anything in either direction."
         )
 
-# --- 3. CLAUDE.md still carries the rules ----------------------------------
-claude_md = root / "CLAUDE.md"
-if target.exists() and claude_md.is_file():
+# --- 3. CLAUDE.md still carries the rules, in EVERY repo -------------------
+#
+# This used to check only the repo the session was running in, which meant a
+# repo nobody had opened for a month could carry a stale §2 and nothing would
+# say so. That is the same shape as the gap that let check-refs.py drift:
+# a check that exists but only runs where somebody happens to be standing.
+#
+# CLAUDE.md is per-repo — §13.3 puts §2 and §3 inline and the app-specific half
+# is the repo's own — so the copies are NOT compared with each other. Each is
+# compared against its own SYSTEM.md, which check (2) has already established
+# is the same file everywhere.
+stale_here = False
+for repo in ([root] + [r for r in _spec.app_repos() if r.resolve() != root.resolve()]):
+    spec, claude_md = repo / "SYSTEM.md", repo / "CLAUDE.md"
+    where = "this repo" if repo.resolve() == root.resolve() else rel(repo)
+
+    if not spec.exists():
+        continue  # check (2) already reports a repo missing its spec.
+    if not claude_md.is_file():
+        findings.append(f"CLAUDE.md is missing from {where} (§13.3).")
+        continue
     try:
-        want_blocks = _spec.blocks(target.read_text())
+        want_blocks = _spec.blocks(spec.read_text())
     except ValueError:
-        findings.append("§2 or §3 could not be located in this repo's "
+        findings.append(f"§2 or §3 could not be located in {where}'s "
                         "SYSTEM.md, so CLAUDE.md could not be checked "
-                        "against it.")
-    else:
-        have = claude_md.read_text()
-        stale = [name for name, body in zip(("§2", "§3"), want_blocks)
-                 if body not in have]
-        if stale:
+                        "against it. Absence is not agreement (§2.1).")
+        continue
+
+    have = claude_md.read_text()
+    stale = [name for name, body in zip(("§2", "§3"), want_blocks)
+             if body not in have]
+    if stale:
+        stale_here = stale_here or repo.resolve() == root.resolve()
+        findings.append(
+            f"CLAUDE.md in {where} no longer carries "
+            f"{' and '.join(stale)} verbatim from its SYSTEM.md.\n\n"
+            "  §13.3 requires them inline; the SessionStart hook injects "
+            "them live from SYSTEM.md. A session reads both, so a "
+            "disagreement means one of the two is wrong and nothing else "
+            "would say which (bug family (b)). Regenerate the block from "
+            "that repo's SYSTEM.md rather than editing it by hand."
+        )
+
+
+# --- 4. the tooling agrees too ---------------------------------------------
+#
+# Documents have a source of truth and a sanctioned direction; tools do not.
+# Ecosystem is downstream for tooling — a session improves a hook in the repo
+# it is working in, and the improvement flows outward from there. So this
+# reports disagreement and never infers which side is right.
+#
+# From 2026-09-08 every tool carries a **Version line, read here with the same
+# _spec.version() that reads a spec file. It does NOT settle direction, and
+# nothing below treats a higher number as the winner: a tool can be ahead in
+# version and behind in content, which is exactly what three divergent copies
+# of _spec.py were. What it settles is order. "Three versions, unknown order"
+# is the hard case; "three versions, known order" is a diff you can read.
+# `[SEAN 2026-09-08]`
+#
+# A tool with no version line is reported as such rather than as version zero —
+# unknown is not "oldest" (§2.1).
+repos = _spec.app_repos()
+if not repos:
+    findings.append(
+        "no app repos were found under ~/Projects, so the tooling could not be "
+        "compared. Absence is not agreement (§2.1)."
+    )
+else:
+    # Every hook present in ANY repo, plus the two files named outright. If the
+    # names came from one repo, that repo could lose a hook and take the check
+    # for it away in the same move.
+    watched = list(_spec.TOOLING) + [
+        f".claude/hooks/{name}" for name in _spec.hook_names(repos)
+    ]
+
+    for relpath in watched:
+        # ecosystem holds check-refs.py and no .claude at all. It is included
+        # where it has a copy and never counted as missing where it does not —
+        # it is not an app repo and is not required to hold the hooks.
+        groups, absent = _spec.compare_tooling(
+            relpath, repos, extra=[_spec.ECOSYSTEM]
+        )
+
+        if absent:
             findings.append(
-                f"CLAUDE.md no longer carries {' and '.join(stale)} verbatim "
-                "from SYSTEM.md.\n\n"
-                "  §13.3 requires them inline; the SessionStart hook injects "
-                "them live from SYSTEM.md. A session reads both, so a "
-                "disagreement means one of the two is wrong and nothing else "
-                "would say which (bug family (b))."
+                f"{relpath} is on the canonical list and these app repos do "
+                "not have it:\n\n"
+                + "\n".join(f"    {rel(p)}" for p in sorted(absent))
+                + "\n\n  A missing copy is not an agreeing copy (§2.1)."
             )
-elif target.exists() and not claude_md.is_file():
-    findings.append("CLAUDE.md is missing from this repo (§13.3).")
+
+        if len(groups) > 1:
+            lines = []
+            for key, holders in sorted(groups.items(), key=lambda kv: -len(kv[1])):
+                for holder in sorted(holders):
+                    v = _spec.version(holder / relpath)
+                    label = f"v{'.'.join(map(str, v))}" if v else "unversioned"
+                    lines.append(f"    {label:<12} {key[:12]}  {rel(holder)}")
+            findings.append(
+                f"{relpath} differs between repos — {len(groups)} versions "
+                "exist:\n\n"
+                + "\n".join(lines)
+                + "\n\n  Tooling has no sanctioned direction: ecosystem is "
+                "authoritative for the documents and downstream for the tools, "
+                "so which copy is right cannot be read off the paths. Diff them "
+                "and decide, then apply the result to every copy deliberately. "
+                "Do not copy one over the rest to make this quiet."
+            )
+
+# --- 5. every @import resolves ---------------------------------------------
+#
+# CLAUDE.md is the first thing a session reads, and an @import naming a file
+# that does not exist resolves to nothing, silently — the session simply never
+# sees what it was supposed to. Found on 2026-09-06: ~/Projects/ecosystem
+# imported @AGENTS.md and has never had that file, the line having been copied
+# from a repo where it meant something.
+#
+# Across every repo rather than only this one, because that is where the
+# broken one was and a check that only looks at its own house would not have
+# found it.
+broken = []
+for cm in _spec.claude_files():
+    for spec, target in _spec.imports(cm):
+        if not target.exists():
+            broken.append((cm, spec))
+if broken:
+    findings.append(
+        "these @imports point at files that do not exist:\n\n"
+        + "\n".join(f"    {rel(cm)}  imports  {spec}" for cm, spec in broken)
+        + "\n\n  CLAUDE.md is the first thing a session reads and a missing "
+        "import resolves to nothing without saying so, which means a session "
+        "never sees what it was meant to."
+    )
 
 # --- report ----------------------------------------------------------------
 if findings:

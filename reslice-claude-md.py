@@ -12,6 +12,9 @@ end" and this cannot drift from the thing that verifies it.
 Everything outside the two blocks is untouched — the app-specific section at
 the bottom of each CLAUDE.md is per-repo and must survive.
 
+**Version 1.0 · 2026-09-08** — written in fnd-tracker during the v3.1 copy
+out, after doing it by hand dropped a horizontal rule.
+
 Usage:  python3 reslice-claude-md.py [path/to/repo]     (default: .)
 Exit:   0 if it re-sliced or had nothing to do, non-zero if it refused.
 

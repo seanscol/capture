@@ -25,6 +25,11 @@ always SYSTEM.md. It uses "item N" for its own sections and reserves § for
 SYSTEM.md, and this makes that convention enforceable rather than merely
 observed.
 
+**Version 1.0 · 2026-09-08** — the copy every app repo carried on 09-07,
+which is two versions ahead of the one ecosystem held from 09-05 to 09-06.
+That gap was invisible: the old copy ignores --defs and checks
+operating-notes.md against itself, which passes and means nothing.
+
 Usage:  python3 check-refs.py [path/to/SYSTEM.md] [--defs path/to/SYSTEM.md]
 Exit:   0 clean, 1 problems found.
 """

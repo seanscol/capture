@@ -1,10 +1,16 @@
 """Shared helpers for the spec hooks.
 
+**Version 1.0 · 2026-09-08** — the merge of three copies that had each grown
+a different half. fnd-tracker held the base, adhd-tasks added the @import
+readers, routine added the tooling comparison; every shared member was
+byte-identical across all four repos, so this is a union and not a choice.
+
 One definition, imported (§7(b): a value one part respects and another
 assumes — export ONE definition). The section slicing lives here because both
 inject-rules.py and check-refs-stop.py need it, and two copies of "where does
 §2 end" is the bug family that rule names.
 """
+import hashlib
 import re
 from pathlib import Path
 
@@ -158,3 +164,133 @@ def classify(source_version, copies):
         else:
             drifted.append(path)
     return pending, drifted, unknown
+
+
+def claude_files(root=None):
+    """Every CLAUDE.md under ~/Projects, one per directory.
+
+    Discovered rather than listed, for the same reason as spec_copies. `root`
+    exists so the branches can be exercised against a synthetic tree.
+    """
+    base = Path(root) if root is not None else PROJECTS
+    if not base.is_dir():
+        return []
+    found = [p / "CLAUDE.md" for p in sorted(base.iterdir()) if p.is_dir()]
+    return [p for p in found if p.is_file()]
+
+
+# An import is a line whose whole content is `@something`.
+#
+# Deliberately not matching inline `@foo` inside prose. Claude Code supports
+# those, but nothing here uses them and every `@` in these files that is not on
+# its own line is an npm scope or an address — so matching them would produce
+# findings that are wrong, in a checker whose value depends on being silent
+# when everything is fine. A missed import is a gap; a false one trains him to
+# ignore the whole message, which costs the other three checks too.
+IMPORT = re.compile(r"^\s*@([^\s@]+)\s*$", re.M)
+
+
+def imports(path):
+    """(as written, resolved) for every @import in a CLAUDE.md."""
+    try:
+        text = Path(path).read_text()
+    except OSError:
+        return []
+    out = []
+    for m in IMPORT.finditer(text):
+        spec = m.group(1)
+        if spec.startswith("~/"):
+            target = Path.home() / spec[2:]
+        elif spec.startswith("/"):
+            target = Path(spec)
+        else:
+            target = Path(path).parent / spec
+        out.append((spec, target))
+    return out
+
+
+# ---------------------------------------------------------------------------
+# Tooling on NEXT-STEPS.md's canonical list
+# ---------------------------------------------------------------------------
+#
+# The canonical list of what a repo holds names six things: SYSTEM.md,
+# operating-notes.md, DECISIONS.md, CLAUDE.md, check-refs.py, and
+# .claude/settings.json (with the hooks it points at). Until 2026-09-06 the
+# drift check watched the first four and nothing watched the last two.
+#
+# What that cost, found by accident while creating the fourth app repo:
+# check-refs.py in ecosystem was two versions behind the copy all three app
+# repos carried, and it had been so since 09-05. The Stop hook calls it with
+# --defs when checking operating-notes.md; the old copy ignores the flag and
+# checks that file against ITSELF, which is exactly the failure --defs was
+# written to fix — three of its five references resolve against the wrong
+# document, read perfectly, and pass. A clean run that meant nothing.
+#
+# THE DIRECTION RULE DOES NOT APPLY TO TOOLING, and that is the reason this
+# needs its own comparison rather than reusing the one above. Sean, 2026-09-06:
+# *"Ecosystem is authoritative for documents; for tooling it's downstream of
+# the sessions that improve it, and the direction rule doesn't say so."* So
+# there is no original to measure against and no "pending" direction to infer.
+# Copies either all agree or they do not, and when they do not the answer is to
+# say which repos hold what — never to pick one and copy it over the rest.
+
+TOOLING = ("check-refs.py", ".claude/settings.json")
+
+
+def app_repos(root=None):
+    """Directories that are app repos, as opposed to the spec source.
+
+    SYSTEM.md marks a directory as part of the set; package.json separates an
+    app from ecosystem, which holds the documents and deliberately holds no
+    hooks. Discovered rather than listed, for the same reason spec_copies() is:
+    a hardcoded set is bug family (d) the moment a fifth repo exists.
+    """
+    base = Path(root) if root is not None else PROJECTS
+    if not base.is_dir():
+        return []
+    return [p for p in sorted(base.iterdir())
+            if p.is_dir() and (p / "SYSTEM.md").is_file()
+            and (p / "package.json").is_file()]
+
+
+def hook_names(repos):
+    """Every hook script name present in ANY app repo.
+
+    The union, not this repo's own listing. A repo missing a hook the others
+    have is the finding — and if the names were read from one repo, that repo
+    could lose a hook and take the check for it away at the same moment.
+    """
+    names = set()
+    for repo in repos:
+        hooks = repo / ".claude" / "hooks"
+        if hooks.is_dir():
+            names.update(f.name for f in hooks.iterdir() if f.suffix == ".py")
+    return sorted(names)
+
+
+def compare_tooling(relpath, repos, extra=()):
+    """Group copies of one file by content.
+
+    Returns (groups, missing) where groups maps a digest to the directories
+    holding that version, and missing lists directories with no copy at all.
+    A missing copy is never folded into agreement (§2.1) — it is returned
+    separately so the caller has to say something about it.
+
+    `extra` is for directories that legitimately hold some tooling but not all
+    of it: ecosystem has check-refs.py and no .claude, so it belongs in the
+    comparison for the former and not in the missing list for the latter.
+    """
+    groups, missing = {}, []
+    for repo in list(repos) + [p for p in extra if p not in repos]:
+        f = repo / relpath
+        if not f.is_file():
+            if repo in repos:
+                missing.append(repo)
+            continue
+        try:
+            key = hashlib.sha256(f.read_bytes()).hexdigest()
+        except OSError:
+            missing.append(repo)
+            continue
+        groups.setdefault(key, []).append(repo)
+    return groups, missing
