@@ -62,7 +62,41 @@ something outranks any heuristic. `[ECO]` One exception under
 consideration: the manic-phase floor, §12 Q3 — under consideration
 *because* it is an exception.
 
-**2.4 Nothing the system does on Sean's behalf may score.** Bulk imports and
+**2.4 Nothing the system does on Sean's behalf may score.**
+
+> **Enforceable in FND from 2026-09-07**, closing correction 22. Every entry
+> records `actor` (`sean` | `system`) and `via` (`app` | `shortcut` |
+> `voice` | `capture` | `import` | `diagnostic`). Three decisions on the
+> record `[SEAN 2026-09-07]`:
+>
+> **Absent `actor` means his, and counts.** Every entry predating the field
+> has none, and excluding an entry *raises what the app permits* — §2.1,
+> upward is earned. No backfill, no migration: the default is the answer,
+> not a gap.
+>
+> **A capture-derived bout is `sean`.** The model transcribed what he said
+> and the bout happened to his body. Scoring these zero would make
+> voice-logging silently add nothing to his load — absence read as good news
+> on the input he uses most — and would make voice cheaper than typing,
+> failing §2.1's incentive test.
+>
+> **A health import is `sean`, `via: import`.** §2.4 names bulk imports as
+> system work worth zero, and **that clause does not transfer**: a watch
+> reading is not effort. Marking these system would drop real HRV and
+> skin-temperature readings out of the signals and *raise* what he is
+> permitted. **§2.4 is about scoring effort, not about provenance** — the
+> same correction §2.2's "corrupts everything downstream" clause needed.
+>
+> **And the finding that inverts the obvious reading:** marking a fabricated
+> entry `system` does not neutralise it. **Three days of 400 CLU marked
+> `system` take the effective daily budget from 80 to 574.** Scoring zero
+> removes an entry from the load total while leaving it in the evidence base
+> that sets the ceiling — so fabricated load does not add to what he has
+> done, **it raises what he is permitted to do.** Correction 22 assumed an
+> `actor` field would have made the planted bout harmless; it would not
+> have. **`actor` is an effort-attribution mechanism, not a safety one**, and
+> the safety mechanism remains §7's rule against production-write
+> diagnostics. `[FND-chat 2026-09-07]` Bulk imports and
 scripted work are recorded but worth zero. `[NEXT]`
 
 **2.5 The logical day runs 05:00 → 05:00 Europe/London.** Never midnight.

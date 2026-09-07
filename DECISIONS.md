@@ -1,6 +1,6 @@
 # DECISIONS.md — history, reasoning, and corrections
 
-**Version 3.0 · 2026-09-06** — versioned as a set with `SYSTEM.md`. Added
+**Version 3.1 · 2026-09-07** — versioned as a set with `SYSTEM.md`. Added
 because without this line the drift check could only ever classify this file
 as `unknown`: protected but not versioned. `[FND-chat 2026-09-06]`
 
@@ -313,6 +313,17 @@ the record, 612 → 613 → 612. The first is the one that should have been
 sufficient. See correction 22.
 
 ### 22. A diagnostic wrote to the production health record
+**CLOSED 2026-09-07 — and its stated remedy was wrong.**
+The entry below concluded that FND's lack of an `actor` field was why the
+planted bout was harmful. FND now has one, and **it would not have helped.**
+Marking a fabricated entry `system` removes it from the load total while
+leaving it in the evidence base that sets the ceiling: **three days of 400
+CLU marked `system` take the effective daily budget from 80 to 574.**
+Fabricated load does not add to what he has done — **it raises what he is
+permitted to do**, which is worse. `actor` is an effort-attribution
+mechanism; the safety mechanism is and remains §7's rule against
+production-write diagnostics. `[FND-chat 2026-09-07]`
+
 **What happened:** to demonstrate the write hole, a one-step walking bout
 was posted to the live record with no credential, confirmed present, then
 deleted. It existed for about ninety seconds and while it existed it counted
@@ -428,6 +439,32 @@ chat because it was the only consequence touching a rule.
 ---
 
 ## Part 4 — Changelog
+
+**3.1 — 2026-09-07.** FND wired to the capture service.
+
+- **§2A.1 moved by decision** `[SEAN]`. FND may call the capture service;
+  the clause forbidding other apps writing to FND is untouched. Recorded
+  here because the file said otherwise and every session would have objected
+  to the build on sight, correctly. Two conditions built and tested: the
+  fallback exercised as the normal case via a settings switch, fifteen
+  failure-mode tests, and every reply naming which reader read it and
+  whether it was chosen or fallen back to.
+- **Correction 22 closed, and its remedy corrected.** `actor` and `via` now
+  exist in FND, so §2.4 is enforceable — but marking a fabricated entry
+  `system` **raises the ceiling** rather than neutralising it. The obvious
+  reading was wrong and is now recorded as wrong.
+- **§2.4's "bulk imports" clause does not transfer to health imports.** A
+  watch reading is not effort, and marking it system would drop real HRV and
+  skin-temperature signals and raise what he is permitted. Same shape as
+  §2.2's consequence clause not transferring to a task list.
+- **Bug family (r): a test that counts rather than locates.** Provenance
+  objects landed in the HTTP response instead of the entry; the test counted
+  occurrences per file and the totals matched. **Counting is not locating.**
+  Two `as never` casts silenced the type checking that would have caught it,
+  and both were unnecessary.
+- **§10 has a second caller and one token for both.** Revoking FND's access
+  revokes the ADHD app's. Not urgent — it guards a metered API key, nothing
+  medical — but §10 claims to authenticate callers, plural. `[PROPOSED]`
 
 **3.0 — 2026-09-06.** `DECISIONS.md` joins the versioned set, and the hooks
 are found to have forked.

@@ -1,6 +1,8 @@
 # SYSTEM.md — Sean's personal app ecosystem
 
-**Version 3.0 · 2026-09-06** — supersedes v2.8, which was **issued twice with
+**Version 3.1 · 2026-09-07** — FND is wired to the capture service; §2A.1
+moved by decision, §2.4 now enforceable in FND, correction 22 closed. v3.0
+was: — supersedes v2.8, which was **issued twice with
 different content**: the planning chat revised it an hour later without
 bumping the number, so ecosystem and the repos held different bytes at the
 same version and the drift check could only read that as a copy edited in
@@ -153,7 +155,41 @@ something outranks any heuristic. `[ECO]` One exception under
 consideration: the manic-phase floor, §12 Q3 — under consideration
 *because* it is an exception.
 
-**2.4 Nothing the system does on Sean's behalf may score.** Bulk imports and
+**2.4 Nothing the system does on Sean's behalf may score.**
+
+> **Enforceable in FND from 2026-09-07**, closing correction 22. Every entry
+> records `actor` (`sean` | `system`) and `via` (`app` | `shortcut` |
+> `voice` | `capture` | `import` | `diagnostic`). Three decisions on the
+> record `[SEAN 2026-09-07]`:
+>
+> **Absent `actor` means his, and counts.** Every entry predating the field
+> has none, and excluding an entry *raises what the app permits* — §2.1,
+> upward is earned. No backfill, no migration: the default is the answer,
+> not a gap.
+>
+> **A capture-derived bout is `sean`.** The model transcribed what he said
+> and the bout happened to his body. Scoring these zero would make
+> voice-logging silently add nothing to his load — absence read as good news
+> on the input he uses most — and would make voice cheaper than typing,
+> failing §2.1's incentive test.
+>
+> **A health import is `sean`, `via: import`.** §2.4 names bulk imports as
+> system work worth zero, and **that clause does not transfer**: a watch
+> reading is not effort. Marking these system would drop real HRV and
+> skin-temperature readings out of the signals and *raise* what he is
+> permitted. **§2.4 is about scoring effort, not about provenance** — the
+> same correction §2.2's "corrupts everything downstream" clause needed.
+>
+> **And the finding that inverts the obvious reading:** marking a fabricated
+> entry `system` does not neutralise it. **Three days of 400 CLU marked
+> `system` take the effective daily budget from 80 to 574.** Scoring zero
+> removes an entry from the load total while leaving it in the evidence base
+> that sets the ceiling — so fabricated load does not add to what he has
+> done, **it raises what he is permitted to do.** Correction 22 assumed an
+> `actor` field would have made the planted bout harmless; it would not
+> have. **`actor` is an effort-attribution mechanism, not a safety one**, and
+> the safety mechanism remains §7's rule against production-write
+> diagnostics. `[FND-chat 2026-09-07]` Bulk imports and
 scripted work are recorded but worth zero. `[NEXT]`
 
 **2.5 The logical day runs 05:00 → 05:00 Europe/London.** Never midnight.
@@ -207,6 +243,19 @@ code, packages or storage with FND. **FND never acquires a dependency on
 another app.** Changes made *to* FND because the ecosystem needs them (e.g.
 a second read token) are his own development — the prohibition is on FND
 acquiring a dependency, not a feature. `[SEAN]` `[FND-chat]`
+
+> **MOVED 2026-09-07, deliberately.** `[SEAN]` **FND may call the capture
+> service.** *"The rule's real content is 'nothing else writes to FND' and
+> that's untouched: capture is stateless, holds no FND credential, and the
+> direction stays one-way — FND calls out, capture never calls in."* Two
+> conditions, both built: **the fallback is exercised as the normal case**,
+> via a settings switch that runs whole days on the word rules, with fifteen
+> tests covering every way the service can fail — no token, no answer, 401,
+> 413, 500, a 200 in the wrong shape, a 200 that parsed nothing; and every
+> reply says which reader read it, **distinguishing chosen from fallen back
+> to**, because a model parse and a keyword parse are wrong in completely
+> different ways. The clause forbidding other apps writing to FND is
+> unchanged and inviolate. `[FND-chat 2026-09-07]`
 
 **2A.2 The FND tracker and the ADHD task app do not interact.** No calls,
 no shared storage, no modelling of physical condition in the task app.
@@ -669,6 +718,21 @@ wording — it is a phrase gaining the weight of a quotation in files that are
 full of real quotations doing exactly that job. Same shape as correction 18,
 in a different medium. `[ADHD-chat 2026-09-05]` **Quote him or don't attribute.**
 
+**(r) A test that counts rather than locates.** Two `add*Log` calls in FND's
+`/api/quick` ended `} as never)`. The cast silenced type checking, so the
+provenance object for each landed in the HTTP response below it instead of in
+the entry — **entries went into the record with no `actor` while the reply
+carried one.** The test that should have caught it counted `provenance:`
+occurrences against the number of entry-creating calls per file. The totals
+matched. It now brace-matches each call's own argument. **Counting is not
+locating, and the same shape will be in any check that asserts a total rather
+than a place.** `[FND-chat 2026-09-07]`
+
+Two things worth separating out of that. **A cast turns a check off**, and
+both casts here were unnecessary — `tsc` was clean without them, so the
+silencing bought nothing. And it is bug family (c) once more: the
+verification shared the assumption it existed to test.
+
 ### Practices that worked `[FND §7]`
 
 - Tests read **real stored entries** — never writing to real storage.
@@ -1053,6 +1117,33 @@ none. **The known hole:** when the model quotes a wider span than it used —
 quoting a whole retraction, then taking a date from inside it — the words
 are present and grounding sees nothing wrong. Recorded, not fixed; fixing it
 against one paragraph would be tuning to noise.
+
+**A second caller, and one token for both.** FND was wired to the service on
+2026-09-07. The service checks a single expected value, so FND, the ADHD app
+and any future caller send the same string — **revoking one revokes all**.
+FND itself has deliberately the opposite arrangement, `API_TOKEN` for writes
+and `INTEGRATION_TOKEN` for reads, *"so the global app's access can be
+revoked without killing the Scriptable widgets."* Not urgent: the token is a
+credential for nothing but a metered API key. But §10 says the service
+authenticates its *callers*, plural, and today it authenticates one.
+`[FND-chat 2026-09-07]` `[PROPOSED]`
+
+**What FND sends, and what it refuses to.** One bout with components, never
+one item per exercise — two items with no stated time have no gap between
+them to make them separate, so they merge, and only a separately stated time
+makes a second bout. **Enforced in code, not asked for in the prompt.** The
+model never prices anything (CLU lives in `activities.ts` and the enum is
+generated from it at request time), never resolves a time (*"at two"* is
+14:00 or 02:00 and both are ordinary), and never guesses an activity — an id
+off the list is refused rather than mapped to the nearest. Symptom shorthand
+never leaves the app: *"zero one one two"* is four syllables, deterministic
+and offline, and it is the input most likely to be skipped when he feels
+bad. `existing` is never sent — voice creates bouts, editing a past one is a
+screen job — and a modification arriving anyway is reported, never applied.
+**`unparsed`, `unaccounted`, `removed`, `unverified` and `dropped` all reach
+him:** a capture that reads three of four exercises and reports three cleanly
+silently lowers his load. Timeout 14s, taken from the ADHD client rather than
+re-derived. `[FND-chat 2026-09-07]`
 
 **Outstanding:** five prompt rules were written before the temperature
 default was found, so they were tuned against randomised output. Some fixed
