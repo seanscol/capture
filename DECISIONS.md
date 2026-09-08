@@ -1,6 +1,6 @@
 # DECISIONS.md — history, reasoning, and corrections
 
-**Version 3.1 · 2026-09-07** — versioned as a set with `SYSTEM.md`. Added
+**Version 3.5 · 2026-09-08** — versioned as a set with `SYSTEM.md`. Added
 because without this line the drift check could only ever classify this file
 as `unknown`: protected but not versioned. `[FND-chat 2026-09-06]`
 
@@ -439,6 +439,87 @@ chat because it was the only consequence touching a rule.
 ---
 
 ## Part 4 — Changelog
+
+**3.5 — 2026-09-08.** Use-driven restructuring, and §2.7 extended twice.
+
+- **The task app narrows to basic life tasks.** `[SEAN]` First change driven
+  by use rather than design: *"it just contains too much."* Projects go to
+  the work ecosystem; community and treatment become global-app areas —
+  *"they aren't tasks, and framing them as tasks is part of the issue."*
+  Nothing moves until destinations exist (move protocol, §7). ADHD-chat
+  inventory requested; nothing removed yet.
+- **§2.7 extended: six sources** (phase history joins), **and the mania
+  seasonality chart** — episode-days by day of year, constraints in §2.
+  Confirmed directly, *"Yes to chart"*, after the sparse-data caveat was
+  put. The chart drives nothing; D3 stays deferred.
+- **A second ecosystem for creative work**, out of this spec's scope by
+  instruction. Meta-app joining the two globals `[PROPOSED]`, undesigned.
+- **Phase-2 backlog, verbatim from Sean's sketch:** calendar, email,
+  diaries, dating, online notes, recovery, screen time, app use, weight,
+  diet, resting HR, sleep, HRV, bloods, mania, exercise; one holistic
+  sentence a day; charts and correlations; cross-source pattern noticing;
+  suggestions on app interactions; daily vocal check-in; teaching & money
+  (Calendly, Superprof, Google Calendar, Tara, monthly exports from Emma);
+  *"get up in the morning and not think about what I'm doing the entire
+  day."* ~15 integrations — the archive's most expansive plan held 30
+  deliverables (`operating-notes.md` item 5). Shipped one at a time, each
+  working before the next starts. The morning output informs the routine
+  app's sequence; it does not replace it with a timetable.
+
+**3.4 — 2026-09-08.** The health app un-exists, three hours old.
+
+- **It is the global app after all.** `[SEAN]` One app, two phases, with the
+  boundary as a rule: phase 1 is the physical record and is entirely
+  deterministic — no model call anywhere; phase 2 is synthesis, where D3 and
+  Q2 still live and are still decided. §5.5 reverts to one sanctioned
+  cross-reader plus the backup exception — v3.3's "second cross-reader"
+  category is withdrawn, half a day old. Burn a number, never reuse one.
+
+**3.3 — 2026-09-08.** The first amendment to §2, and a seventh app.
+
+- **§2.7's synthesis prohibition lifted for the health app.** `[SEAN]` His
+  reasoning, verbatim: *"I don't think the rule as it's written is correct…
+  of course there can be false correlations, but that's fine. I'm capable of
+  discerning the false ones."* The counter-case was put before he decided:
+  thirty variables is 435 pairs and ~20 spurious hits at conventional
+  thresholds; daily health data co-trends, so everything correlates; and a
+  false trigger belief acted on is §2.7's own *"it only needs to be
+  believed."* Decided with that in front of him, which is what §2A asks.
+  **Preserved: FND's sole authority on present capacity, §2.6, and
+  suggestions labelled as suggestions with their data cited.**
+- **The health app is not the global app.** `[SEAN]` It aggregates the
+  physical record only. The global app remains, later and larger — calendar,
+  email `[PROPOSED]`, diaries, all apps — synthesising so he doesn't have to
+  be across everything himself. Build order: health next, media optional,
+  global last.
+- **§5.5 gains its second named cross-reader.** The category predicted on
+  2026-09-04 — *"two instances tell you what the category actually is"* —
+  now has them: read-only, own revocable credential per source, never
+  writing to what it reads.
+
+**3.2 — 2026-09-08.** The tooling merges, and the guards start watching
+themselves.
+
+- **`_spec.py` was a straight union, not a fork.** Every shared member
+  byte-identical across four repos; three repos had each added something
+  different and nothing overlapped. The planning chat expected a fork and
+  asked which was the superset — the answer was neither, and the merge was
+  mechanical.
+- **A higher version never wins.** Written into the code rather than left to
+  be remembered: **a tool can be ahead in version and behind in content**,
+  which is exactly what three copies of `_spec.py` were. An unversioned tool
+  reports as *unversioned*, not zero — unknown is not oldest (§2.1).
+- **Three of the five `Stop` checks now look at every repo.** *"A check that
+  exists but only runs where somebody happens to be standing"* is the
+  mechanism behind nearly every finding of the first week.
+- **`reslice-claude-md.py` joins the canonical list**, and it refuses rather
+  than half-completing: a partly re-sliced `CLAUDE.md` is worse than a stale
+  one, because the stale one is at least internally consistent. Third guard
+  in this system built to fail rather than half-succeed.
+- **Bug family (c) again, in the tests written to prevent it.** Eleven new
+  cases were inserted after the fixture cleanup and passed only because the
+  helper recreates directories, leaking a temp tree each run. Caught by the
+  session that wrote them.
 
 **3.1 — 2026-09-07.** FND wired to the capture service.
 

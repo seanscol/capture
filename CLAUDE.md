@@ -131,6 +131,39 @@ of observations and citing their sources do not touch it. `[ADHD-chat
 2026-09-03]` The prohibition binds *the combination*, not either app, so it
 also lands on the task app's data. `[ADHD-chat]`
 
+> **MOVED 2026-09-08, deliberately — the first amendment to §2 itself, made
+> by the only person who can.** `[SEAN]` The synthesis prohibition is lifted
+> for the **global app's physical-record layer** (§13.7 step 5): it may
+> notice and suggest patterns across
+> FND, routine, nutrition, Fitbit and blood-test data — correlations
+> included. His reasoning: false correlations are his to discern (§2.3,
+> manual override always wins), and noticing things he isn't aware of is the
+> app's point. The counter-case — many-comparison noise, and §2.7's own
+> *"it only needs to be believed"* — was put in full and is recorded at
+> DECISIONS 3.3; he decided with it in front of him.
+>
+> **Extended 2026-09-08** `[SEAN]`: sanctioned sources become six — FND,
+> routine, nutrition, Fitbit, blood tests, and **phase history**, which may
+> be correlated with the other five. And one named chart: **observed manic
+> episode-days counted by day of year** — the instrument the archive itself
+> specifies (`operating-notes.md` item 5, *"mania chart"*), kept by hand for
+> ten years to anticipate and prepare. Constraints are part of the grant:
+> episode count printed on the chart, **no date highlighted as due, no
+> fitted periodicity drawn, no month coloured as safe**, hypomanic episodes
+> a separate series off by default. **The chart drives nothing** — sets no
+> floor, changes what no app expects, feeds no capacity response; that is
+> D3, still deferred. The sparse-data caveat (rare events over 366 buckets
+> cluster by chance, and a chart is most persuasive exactly where a belief
+> already exists) was put to Sean directly and accepted: *"Yes to chart."*
+> The cheap error is preparing for a September that was noise; the
+> expensive one it guards against is the reverse.
+>
+> **What survives, unmoved: FND is the sole authority on present capacity.**
+> Nothing computes a rival verdict on how much he can do today, nothing
+> modifies or reweights FND's numbers, and §2.6 stands — noticing a past
+> pattern is not forecasting. Every suggestion is labelled as a suggestion
+> and cites the data it came from.
+
 **It prohibits assertion but not selection, and selection is where a model
 does most of its work.** "On your three lowest-room days you finished nothing"
 asserts nothing; the whole claim lives in which days were chosen. See §9 for

@@ -1,6 +1,6 @@
 # SYSTEM.md — Sean's personal app ecosystem
 
-**Version 3.1 · 2026-09-07** — FND is wired to the capture service; §2A.1
+**Version 3.5 · 2026-09-08** — FND is wired to the capture service; §2A.1
 moved by decision, §2.4 now enforceable in FND, correction 22 closed. v3.0
 was: — supersedes v2.8, which was **issued twice with
 different content**: the planning chat revised it an hour later without
@@ -223,6 +223,39 @@ assert relationships, because that is what synthesis means. Capping the number
 of observations and citing their sources do not touch it. `[ADHD-chat
 2026-09-03]` The prohibition binds *the combination*, not either app, so it
 also lands on the task app's data. `[ADHD-chat]`
+
+> **MOVED 2026-09-08, deliberately — the first amendment to §2 itself, made
+> by the only person who can.** `[SEAN]` The synthesis prohibition is lifted
+> for the **global app's physical-record layer** (§13.7 step 5): it may
+> notice and suggest patterns across
+> FND, routine, nutrition, Fitbit and blood-test data — correlations
+> included. His reasoning: false correlations are his to discern (§2.3,
+> manual override always wins), and noticing things he isn't aware of is the
+> app's point. The counter-case — many-comparison noise, and §2.7's own
+> *"it only needs to be believed"* — was put in full and is recorded at
+> DECISIONS 3.3; he decided with it in front of him.
+>
+> **Extended 2026-09-08** `[SEAN]`: sanctioned sources become six — FND,
+> routine, nutrition, Fitbit, blood tests, and **phase history**, which may
+> be correlated with the other five. And one named chart: **observed manic
+> episode-days counted by day of year** — the instrument the archive itself
+> specifies (`operating-notes.md` item 5, *"mania chart"*), kept by hand for
+> ten years to anticipate and prepare. Constraints are part of the grant:
+> episode count printed on the chart, **no date highlighted as due, no
+> fitted periodicity drawn, no month coloured as safe**, hypomanic episodes
+> a separate series off by default. **The chart drives nothing** — sets no
+> floor, changes what no app expects, feeds no capacity response; that is
+> D3, still deferred. The sparse-data caveat (rare events over 366 buckets
+> cluster by chance, and a chart is most persuasive exactly where a belief
+> already exists) was put to Sean directly and accepted: *"Yes to chart."*
+> The cheap error is preparing for a September that was noise; the
+> expensive one it guards against is the reverse.
+>
+> **What survives, unmoved: FND is the sole authority on present capacity.**
+> Nothing computes a rival verdict on how much he can do today, nothing
+> modifies or reweights FND's numbers, and §2.6 stands — noticing a past
+> pattern is not forecasting. Every suggestion is labelled as a suggestion
+> and cites the data it came from.
 
 **It prohibits assertion but not selection, and selection is where a model
 does most of its work.** "On your three lowest-room days you finished nothing"
@@ -1442,9 +1475,46 @@ weakens it — it is the *editing* that forks, not the checking.
    the one the contract names (§5.4).
 4. **Routine app — next.** First app on the shared package. Boundary with
    the task app decided; sequence in §8.
-5. **Media.**
-6. **Global** — last of the integrated apps; daily synthesis only, then
-   arbitration later. **D3 and Q2 are decided here**, not before.
+5. **Global, phase 1 — the physical record.** `[SEAN 2026-09-08]` **The
+   app's home is areas, of which health is the first** — likely a white
+   screen with a circle of icons, one per area. Community and treatment
+   join as areas in phase 2 (see below); navigation and storage built so an
+   area can be added without rebuilding, **but phase 1 builds only the
+   physical record.** v3.3
+   briefly made this a separate "health app"; same day Sean folded it back:
+   *"I think this is the global app."* One app, two phases, and **the phase
+   boundary is a rule, not a plan**: phase 1 is imports, charts, gaps,
+   thresholds and correlations — **all deterministic, computed statistics,
+   no model call anywhere in it.** Sources: Fitbit exports, MacroFactor
+   nutrition, blood tests typed in once, FND via `/api/export`, frequencies
+   from the routine app (how often, never what — *"that's for an exercise
+   app if I want one"*). Suggested patterns per the §2.7 amendment,
+   labelled and cited. §5.5 needs no change: global was always the
+   sanctioned cross-reader; the backup script stays the only exception.
+6. **Media.** Optional, unscheduled.
+7. **Global, phase 2 — synthesis, and the non-task areas.** **Community and
+   treatment move here from the task app** `[SEAN 2026-09-08]`: *"they
+   aren't tasks, and framing them as tasks is part of the issue"* —
+   socialising and treatment made task-shaped become more things to do,
+   which is `operating-notes.md` item 8 arriving in the architecture. The
+   task app narrows to basic life tasks. Sean's full phase-2 sketch is in
+   DECISIONS 3.5 as backlog: ~15 integrations, shipped one at a time, each
+   working before the next starts — the growth constraint applied to the
+   app itself. The LLM layer, and everything v3.2
+   deferred: daily comments and notes across calendar, his diaries, email
+   `[PROPOSED — undesigned; a far larger credential and privacy surface
+   than anything yet built, its own decision first]`, and every app —
+   *"so that I don't have to be across all of it myself."* §9's bar: it
+   must replace checking, not add to it. **D3 and Q2 are decided here,
+   not before, and phase 1 shipping does not move them.**
+
+**A second ecosystem exists and this document does not govern it.** `[SEAN
+2026-09-08]` Creative work — corpus, YouTube, PhD, films, its own global —
+is a separate project with *"different rules, different principles,
+different ethos"*, deliberately not health-linked. Projects leave the task
+app for it, under the move protocol (§7). A channel or meta-app joining the
+two globals is `[PROPOSED]`, undesigned, decided when the work side exists.
+Sessions in this ecosystem do not read, write, or reason about the other.
 
 **Writing** sits outside this sequence — separate shape, whenever.
 
@@ -1512,6 +1582,27 @@ both versions. That is bug family (b) — a value one part respects and
 another assumes — created by two rules that each make sense alone. The
 `Stop` hook's drift check is what catches it; before that check existed,
 nothing would have. `[FND-chat 2026-09-04]`
+
+**The guards now watch themselves, from 2026-09-08.** The `Stop` hook has
+five checks and three of them look at every repo rather than the one the
+session is standing in — the fix for *"a check that exists but only runs
+where somebody happens to be standing"*, which is the mechanism behind almost
+everything found in the first week: ecosystem's `check-refs.py` two versions
+behind since 09-05 and silently ignoring `--defs`, three versions of
+`_spec.py`, a repo left two spec versions back, a dangling `@import`. It also
+compares the tooling itself and reports who holds what **without picking**,
+because tooling has no sanctioned direction. `[routine-chat, ADHD-chat,
+FND-chat 2026-09-08]`
+
+**Two hooks still missing, and §13.2 is why.** The rule was breached three
+times in one repo on 09-05 and two of the three did damage — `_spec.py`
+rewritten mid-edit leaving the `Stop` hook crashing, and a near-double-repair.
+It is the last major rule enforced by remembering. `[PROPOSED]` A
+`SessionStart` check for *"this working tree is dirty with changes I did not
+make"* catches the easy case; it would **not** have caught `_spec.py`, where
+both sessions started clean and collided later. That needs a `PreToolUse`
+check: **before writing a file, has it changed on disk since I last read it?**
+Answer both before building either.
 
 **A weekly audit task** `[PROPOSED]`, still unbuilt. Claude Code Desktop can
 run a local scheduled task with access to the repos. Read-only, working
