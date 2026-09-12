@@ -282,3 +282,30 @@ domain vocabulary. Domain words belong in the caller's schema, which the
 caller wrote.
 
 <!-- END:ecosystem-spec v2.3 -->
+
+<!-- shared:planning-inbox -->
+### Reporting to the planning chat
+
+Write this session's update for the planning chat to
+`~/Projects/ecosystem/inbox/<this repo>.md`, **overwriting the file, never
+appending.** Several sessions appending to one file at once lose updates
+silently and there is no way to tell afterwards; one file per repo cannot race,
+and its worst case is a stale section, which the collector labels with its age.
+
+It is this repo's **current position**, not a log: decisions Sean made, findings
+the planning chat should hold, and what happens next here. History belongs in
+the git log and in `DECISIONS.md`.
+
+Write it as you go rather than at the end. A session that stops without writing
+it has lost what it found, and between uploads these files exist nowhere else —
+which is why `inbox/` is in the backup.
+
+`~/bin/collect-planning-inbox.sh` concatenates every repo's file into
+`~/Projects/ecosystem/planning-inbox.md` for Sean to upload in one piece, and
+names the repos that wrote nothing, because "no news" and "nobody wrote" look
+identical in a file that shows only what exists.
+
+This block is copied into every repo by `~/bin/sync-shared-files.sh` from
+`ecosystem/shared/blocks/planning-inbox.md`. Change it there, not here: an edit
+here is drift, and the script will replace it.
+<!-- /shared:planning-inbox -->
