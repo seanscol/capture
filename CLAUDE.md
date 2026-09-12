@@ -309,3 +309,20 @@ This block is copied into every repo by `~/bin/sync-shared-files.sh` from
 `ecosystem/shared/blocks/planning-inbox.md`. Change it there, not here: an edit
 here is drift, and the script will replace it.
 <!-- /shared:planning-inbox -->
+
+<!-- shared:no-api-is-not-no-access -->
+### No official API is not the same as no access
+
+`[SEAN 2026-09-12]`, in his words:
+
+No official API does not mean no access. Before concluding a source is
+unavailable, ask Sean whether he can see it logged in — in a browser, in the
+app, or via an export tool like Google Takeout or Apple's privacy portal. He has
+credentials and a browser; you have neither. The Apple Podcasts saved-episodes
+list was declared impossible and turned out to be visible in Chrome while logged
+in.
+
+This block is copied into every repo by `~/bin/sync-shared-files.sh` from
+`ecosystem/shared/blocks/no-api-is-not-no-access.md`. Change it there, not here:
+an edit here is drift, and the script will replace it.
+<!-- /shared:no-api-is-not-no-access -->
