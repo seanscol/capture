@@ -7,6 +7,7 @@
 import { createServer } from "node:http";
 import { loadEnvLocal } from "./env.ts";
 import { handle } from "./handler.ts";
+import { callersFromEnv } from "./callers.ts";
 import { liveModel } from "./model.ts";
 
 loadEnvLocal();
@@ -23,7 +24,12 @@ createServer(async (req, res) => {
       headers: req.headers as Record<string, string | undefined>,
       body: Buffer.concat(chunks).toString("utf8"),
     },
-    { model: liveModel(), token: process.env.CAPTURE_TOKEN }
+    {
+      model: liveModel(),
+      callers: callersFromEnv(process.env),
+      // Off unless deliberately switched on for a migration — see Deps.log.
+      ...(process.env.CAPTURE_LOG_CALLERS === "1" ? { log: (line: string) => console.log(line) } : {}),
+    }
   );
 
   res.writeHead(status, { "content-type": "application/json" });

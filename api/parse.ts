@@ -7,6 +7,7 @@
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { handle } from "../src/handler.ts";
+import { callersFromEnv } from "../src/callers.ts";
 import { liveModel } from "../src/model.ts";
 
 export default async function parseEndpoint(req: IncomingMessage, res: ServerResponse) {
@@ -23,7 +24,12 @@ export default async function parseEndpoint(req: IncomingMessage, res: ServerRes
     // variable takes effect and a missing one is a 401 rather than a crash at
     // import time (§5.2's "resolved per call, never at module load", same
     // reasoning applied to configuration).
-    { model: liveModel(), token: process.env.CAPTURE_TOKEN }
+    {
+      model: liveModel(),
+      callers: callersFromEnv(process.env),
+      // Off unless deliberately switched on for a migration — see Deps.log.
+      ...(process.env.CAPTURE_LOG_CALLERS === "1" ? { log: (line: string) => console.log(line) } : {}),
+    }
   );
 
   res.writeHead(status, { "content-type": "application/json" });

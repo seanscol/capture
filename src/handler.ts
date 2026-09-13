@@ -9,7 +9,7 @@
  * top. `tests/auth.test.ts` holds the order in place by counting model calls
  * rather than reading status codes.
  */
-import { createHash, timingSafeEqual } from "node:crypto";
+import { identify } from "./callers.ts";
 import { parse } from "./parse.ts";
 import type { Deps, HttpRequest, HttpResponse, ParseRequest } from "./types.ts";
 
@@ -25,16 +25,6 @@ const MIN_TEXT_LENGTH = 3;
 
 const fail = (status: number, error: string): HttpResponse => ({ status, body: { error } });
 
-/**
- * Compares digests, not the strings, so neither the length nor the content of
- * the real token leaks through how long the comparison takes.
- */
-function tokenMatches(supplied: string, expected: string): boolean {
-  const a = createHash("sha256").update(supplied).digest();
-  const b = createHash("sha256").update(expected).digest();
-  return timingSafeEqual(a, b);
-}
-
 export async function handle(req: HttpRequest, deps: Deps): Promise<HttpResponse> {
   // ---- 1. auth ------------------------------------------------------------
   // Nothing above this line reads the body, the method, or anything else.
@@ -47,15 +37,24 @@ export async function handle(req: HttpRequest, deps: Deps): Promise<HttpResponse
   // key, and an unset variable is absence of data, which is never good news
   // and never a grant of permission (§2.1): downward is free, upward is
   // earned. So this one fails CLOSED.
-  if (!deps.token) {
-    return fail(401, "This service is not configured with a token, so it accepts nothing.");
-  }
-
   const header = req.headers.authorization ?? req.headers.Authorization ?? "";
   const supplied = /^Bearer\s+(.+)$/i.exec(header)?.[1]?.trim() ?? "";
-  if (!supplied || !tokenMatches(supplied, deps.token)) {
-    return fail(401, "Unauthorized.");
+  const who = identify(supplied, deps.callers);
+
+  if (!who.ok) {
+    deps.log?.(`capture-caller rejected ${who.reason}`);
+    // The caller is told as little as possible. "This value is configured for
+    // two callers" is configuration an unauthenticated request has no business
+    // learning; the refusal reason goes to the log, not the response.
+    return fail(401, who.reason === "unconfigured"
+      ? "This service is not configured with a token, so it accepts nothing."
+      : "Unauthorized.");
   }
+
+  // One line per request, and this is it: the name, never the token or the
+  // words. Written the moment the caller is known, so a request that fails a
+  // later check below still evidences which app sent it.
+  deps.log?.(`capture-caller ${who.caller}`);
 
   // ---- 2. everything else that can reject, still above the model ---------
 

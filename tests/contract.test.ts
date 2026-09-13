@@ -171,7 +171,7 @@ test("a model that throws becomes a clean failure the caller can fall back from"
       body: JSON.stringify({ text: "buy milk", schema: TASK_SCHEMA }),
     },
     {
-      token: TOKEN,
+      callers: { test: TOKEN },
       model: { id: "exploding", async complete() { throw new Error("upstream is down"); } },
     }
   );

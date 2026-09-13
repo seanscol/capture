@@ -34,16 +34,21 @@ Max subscription** — a Claude subscription does not include the API (§13.5).
 **Set a monthly spend limit while you are there.** This file is gitignored and
 is never committed, printed, logged, or echoed in a response.
 
-**3. Generate the caller token:**
+**3. One secret per calling app:**
 
 ```bash
-npm run make-token
+npm run make-token -- fnd
+npm run make-token -- adhd
 ```
 
-That writes a `CAPTURE_TOKEN` into `.env.local` without printing it. Open the
-file to copy it into your password manager — it is what the task app will send
-to prove it is allowed to call this. If it is unset, the service accepts
-nothing and returns 401.
+Each writes `CAPTURE_TOKEN_<APP>` into `.env.local` without printing it. Put the
+same value in two places: the service's Vercel environment under that name, and
+the app's own Vercel environment as `CAPTURE_TOKEN`. Copy it into your password
+manager from the file.
+
+**To revoke one app**, delete its `CAPTURE_TOKEN_<APP>` from the service's Vercel
+environment and redeploy the service. The other apps are unaffected. With no
+secrets set at all, the service accepts nothing and returns 401.
 
 ---
 
@@ -70,7 +75,7 @@ answered and how long it took.
 
 ## The endpoint
 
-`POST /api/parse`, with `Authorization: Bearer <CAPTURE_TOKEN>`.
+`POST /api/parse`, with `Authorization: Bearer <that app's own secret>`.
 
 ```jsonc
 {
@@ -115,7 +120,7 @@ reason the parse has to come back in a second or two rather than overnight.
 |---|---|
 | `200` | Parsed. Look at all three lists. |
 | `400` | The request was wrong — no text, no schema, or too short to hold anything. |
-| `401` | No token, wrong token, or the service has no token configured. |
+| `401` | No token, a token no app holds, a token configured for more than one app, or none configured. |
 | `405` `413` | Not a POST; or the capture is too long. |
 | `502` | The model was unreachable or broke. **Fall back and say so.** |
 

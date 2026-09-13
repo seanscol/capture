@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Stateless capture-parsing service. Text and a schema in, candidate items out. Stores nothing.",
   "scripts": {
-    "test": "tsx --test tests/auth.test.ts tests/contract.test.ts tests/schema.test.ts && echo '\\n  NOT RUN: the acceptance test (tests/acceptance.test.ts). It calls the real\\n  model and costs money. Green above does not mean it passes. Run it with\\n  npm run test:acceptance\\n'",
+    "test": "tsx --test tests/auth.test.ts tests/callers.test.ts tests/contract.test.ts tests/schema.test.ts && echo '\\n  NOT RUN: the two acceptance tests (tests/acceptance.test.ts and\\n  tests/acceptance-2.test.ts). They call the real model and cost money.\\n  Green above does not mean they pass. Run them with\\n  npm run test:acceptance:all\\n'",
     "test:acceptance": "tsx --test tests/acceptance.test.ts",
     "dev": "tsx src/server.ts",
     "make-token": "node scripts/make-token.mjs",

@@ -1,31 +1,36 @@
 /**
- * Generates the caller token and puts it in .env.local.
+ * Generates a secret for ONE calling app and puts it in .env.local:
  *
- * It is deliberately not printed. §10: "The key is never typed into a chat."
- * The same goes for the token guarding the key — open .env.local and copy it
- * into the password manager from there.
+ *     npm run make-token -- fnd        ->  CAPTURE_TOKEN_FND=<new secret>
  *
- * Two slips already caught here, both worth keeping in mind because both
- * failed by looking like success:
+ * Each caller has its own secret (src/callers.ts), so this takes the caller's
+ * name and never writes the bare shared CAPTURE_TOKEN — that is the thing
+ * being retired. Revoking an app is deleting its CAPTURE_TOKEN_<NAME> from the
+ * service's Vercel environment and redeploying; re-issuing is this, then
+ * setting the new value as that app's own CAPTURE_TOKEN.
  *
- *   `\s` matches newlines, so testing for `CAPTURE_TOKEN\s*=\s*\S` reached
- *   across a blank line and matched the `#` of the following comment. It
- *   reported the token as already set when the line was empty.
+ * The secret is deliberately not printed. §10: "The key is never typed into a
+ * chat." Open .env.local and copy it into the password manager from there.
  *
- *   Appending a second CAPTURE_TOKEN line left the empty placeholder above
- *   it, and the loader takes the first occurrence — so the file looked
- *   correct, contained a real token, and authenticated nobody.
- *
- * Both are bug family (a): a success message for something that did not
- * happen. Hence `verify()` at the end, which reads the file back rather than
- * trusting that the write did what it said.
+ * Two slips have already been caught in this file, both of which reported
+ * success at something that had not happened: a `\s` matching across a blank
+ * line, and a second entry appended below an empty placeholder that the loader
+ * then read first. Hence the read-back at the end.
  */
 import { randomBytes } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
 
 const FILE = ".env.local";
-const SET = /^[ \t]*CAPTURE_TOKEN[ \t]*=[ \t]*(\S+)[ \t]*$/m;
-const EMPTY = /^[ \t]*CAPTURE_TOKEN[ \t]*=[ \t]*$/m;
+const name = (process.argv[2] ?? "").trim().toUpperCase();
+
+if (!/^[A-Z0-9]+$/.test(name)) {
+  console.error("Name the calling app:  npm run make-token -- fnd");
+  process.exit(1);
+}
+
+const key = `CAPTURE_TOKEN_${name}`;
+const SET = new RegExp(`^[ \\t]*${key}[ \\t]*=[ \\t]*(\\S+)[ \\t]*$`, "m");
+const ANY = new RegExp(`^[ \\t]*${key}[ \\t]*=`, "m");
 
 let existing = "";
 try {
@@ -36,26 +41,20 @@ try {
 }
 
 if (SET.test(existing)) {
-  console.log(`CAPTURE_TOKEN is already set in ${FILE}. Not touching it.`);
+  console.log(`${key} is already set in ${FILE}. Not touching it.`);
   process.exit(0);
 }
 
-const token = randomBytes(32).toString("hex");
-const line = `CAPTURE_TOKEN=${token}`;
-
-const updated = EMPTY.test(existing)
-  ? existing.replace(EMPTY, line)
+const line = `${key}=${randomBytes(32).toString("hex")}`;
+const updated = ANY.test(existing)
+  ? existing.replace(new RegExp(`^[ \\t]*${key}[ \\t]*=.*$`, "m"), line)
   : existing + (existing.endsWith("\n") || !existing ? "" : "\n") + line + "\n";
-
 writeFileSync(FILE, updated);
 
-// Read it back. A write that reports success is not a write that happened.
 const after = readFileSync(FILE, "utf8");
-const lines = after.split("\n").filter((l) => /^[ \t]*CAPTURE_TOKEN[ \t]*=/.test(l));
-if (lines.length !== 1 || !SET.test(after)) {
-  console.error(`Something is wrong with CAPTURE_TOKEN in ${FILE}: expected one line with a value, found ${lines.length}. Open the file and fix it by hand.`);
+const count = after.split("\n").filter((l) => ANY.test(l)).length;
+if (count !== 1 || !SET.test(after)) {
+  console.error(`Something is wrong with ${key} in ${FILE}: expected one line with a value, found ${count}. Fix it by hand.`);
   process.exit(1);
 }
-
-console.log(`A CAPTURE_TOKEN was written to ${FILE}. It was not printed here.`);
-console.log("Open the file to copy it into your password manager.");
+console.log(`${key} was written to ${FILE}. It was not printed here.`);

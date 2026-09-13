@@ -115,4 +115,15 @@ export type HttpRequest = {
 
 export type HttpResponse = { status: number; body: unknown };
 
-export type Deps = { model: ModelClient; token: string | undefined };
+export type Deps = {
+  model: ModelClient;
+  /** Caller name to its secret — see src/callers.ts. */
+  callers: Record<string, string>;
+  /**
+   * Given one line per request naming the caller or the reason for refusal —
+   * never the token, never the words. Absent unless CAPTURE_LOG_CALLERS is
+   * "1": it exists to evidence a migration, and outside one this service
+   * writes nothing about who called it or when (§10, "It stores nothing").
+   */
+  log?: (line: string) => void;
+};

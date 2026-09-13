@@ -231,11 +231,17 @@ Sean and his own words.
 - **Storage:** none. There is no adapter, no `DATA_DIR`, no key prefix,
   because there is nothing to store. A capture passes through memory and is
   gone. This is the property that makes §5.5 need no exception for it.
-- **Auth:** `src/handler.ts`. `CAPTURE_TOKEN` gates the one endpoint as a
-  Bearer token, compared as a digest so neither length nor content leaks
-  through timing. It is checked **before the body is read and before the
-  model is called** — `tests/auth.test.ts` holds that order in place by
-  counting model calls, not by reading status codes.
+- **Auth:** `src/handler.ts` and `src/callers.ts`. **One secret per calling
+  app**, named on the service side — `CAPTURE_TOKEN_FND`, `CAPTURE_TOKEN_ADHD` —
+  and discovered by that prefix, so adding or revoking an app is configuration,
+  never code. Each app sends its own value from its own `CAPTURE_TOKEN`.
+  Compared as digests against **every** configured secret with no early exit,
+  and a value configured for more than one app is refused for all of them — a
+  revocation that silently fails to revoke is the failure being prevented.
+  Checked **before the body is read and before the model is called** —
+  `tests/auth.test.ts` and `tests/callers.test.ts` hold that order by counting
+  model calls, not by reading status codes. **Which apps currently hold a secret
+  is status: read `vercel env ls`, never this file.**
 
   **It fails CLOSED, and the difference from FND is deliberate.** FND's
   `proxy.ts` fails open when `API_TOKEN` is unset so a typo cannot lock him

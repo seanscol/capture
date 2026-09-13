@@ -36,7 +36,7 @@ const req = (over: Partial<Parameters<typeof handle>[0]> = {}) => ({
 /** Runs one request and reports both halves of the proof. */
 async function attempt(over: Parameters<typeof req>[0], token: string | undefined = TOKEN) {
   const model = recordingModel();
-  const res = await handle(req(over), { model, token });
+  const res = await handle(req(over), { model, callers: token === undefined ? {} : { test: token } });
   return { res, calls: model.calls };
 }
 
@@ -70,11 +70,11 @@ test("the right token: 200, and the model is called exactly once", async () => {
   assert.equal(calls, 1, "One request, one model call. More than one is money.");
 });
 
-test("CAPTURE_TOKEN unset: 401 — this endpoint fails CLOSED", async () => {
+test("no caller secrets configured: 401 — this endpoint fails CLOSED", async () => {
   const model = recordingModel();
   const res = await handle(req({ headers: { authorization: `Bearer ${TOKEN}` } }), {
     model,
-    token: undefined,
+    callers: {},
   });
   assert.equal(res.status, 401,
     "FND's proxy.ts fails OPEN when API_TOKEN is unset, deliberately, so a " +
@@ -88,9 +88,9 @@ test("CAPTURE_TOKEN unset: 401 — this endpoint fails CLOSED", async () => {
   assert.equal(model.calls, 0, NEVER_CALLED);
 });
 
-test("an empty CAPTURE_TOKEN is not a token", async () => {
+test("an empty caller secret is not a token", async () => {
   const model = recordingModel();
-  const res = await handle(req({ headers: { authorization: "Bearer " } }), { model, token: "" });
+  const res = await handle(req({ headers: { authorization: "Bearer " } }), { model, callers: { test: "" } });
   assert.equal(res.status, 401,
     "An empty string is what a mis-set Vercel env var looks like. It must " +
     "not authenticate an empty Bearer header into a match.");
@@ -131,7 +131,7 @@ test("a valid token with no text does not reach the model", async () => {
     const model = recordingModel();
     const res = await handle(
       req({ headers: { authorization: `Bearer ${TOKEN}` }, body: JSON.stringify({ ...bad, schema: TASK_SCHEMA }) }),
-      { model, token: TOKEN }
+      { model, callers: { test: TOKEN } }
     );
     assert.equal(res.status, 400, `should refuse: ${JSON.stringify(bad)}`);
     assert.equal(model.calls, 0, NEVER_CALLED);
