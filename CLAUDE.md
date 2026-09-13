@@ -326,3 +326,22 @@ This block is copied into every repo by `~/bin/sync-shared-files.sh` from
 `ecosystem/shared/blocks/no-api-is-not-no-access.md`. Change it there, not here:
 an edit here is drift, and the script will replace it.
 <!-- /shared:no-api-is-not-no-access -->
+
+<!-- shared:medication-stays-out -->
+### Medication stays out
+
+`[SEAN 2026-09-13]`, in his words: *"my medication is a clinical matter between
+me and my psychiatrist. Nothing here optimises for it, and the mania chart still
+drives nothing."*
+
+Its scope, also his: it covers his medication, the clinical matter between him
+and his psychiatrist, and *"all other drugs are not covered by this."*
+
+Reading, not his words: no app records doses, timing or adherence of that
+medication, and no chart, correlation, cue or suggestion takes it as an input.
+Ask him before anything touches it.
+
+This block is copied into every repo by `~/bin/sync-shared-files.sh` from
+`ecosystem/shared/blocks/medication-stays-out.md`. Change it there, not here:
+an edit here is drift, and the script will replace it.
+<!-- /shared:medication-stays-out -->
