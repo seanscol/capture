@@ -345,3 +345,27 @@ This block is copied into every repo by `~/bin/sync-shared-files.sh` from
 `ecosystem/shared/blocks/medication-stays-out.md`. Change it there, not here:
 an edit here is drift, and the script will replace it.
 <!-- /shared:medication-stays-out -->
+
+<!-- shared:load-is-clinical -->
+### Taking load off his brain is a clinical requirement
+
+`[SEAN 2026-09-13]`, in his words: *"Taking load off my brain is a clinical
+requirement, not a preference — my neuropsychiatrist describes freeing up
+processing capacity as part of FND recovery. Every feature either removes load
+or adds it. Anything that needs me to check, triage or remember is on the wrong
+side, however useful it looks."*
+
+And: *"I have an ADHD brain and I'm building a normal one. I can't single out
+individual things from a mass, can't prioritise among many important things,
+can't do one thing at a time when everything is present, and lose track of
+practical things. Any feature that hands me a list to triage has failed."*
+
+Reading, not his words: every plan answers *"does this remove load or add it?"*
+before anything is built, and names what it would ask him to check, triage or
+remember. The same test applies to how a session reports to him: one
+recommendation rather than a menu of options, and one decision at a time.
+
+This block is copied into every repo by `~/bin/sync-shared-files.sh` from
+`ecosystem/shared/blocks/load-is-clinical.md`. Change it there, not here:
+an edit here is drift, and the script will replace it.
+<!-- /shared:load-is-clinical -->
