@@ -67,14 +67,28 @@ function readLogLines() {
   if (fromFile) return readFileSync(fromFile, "utf8").split("\n");
   const bin = vercelBinary();
   if (!bin) throw new Error("no Vercel CLI found in ~/.npm/_npx");
-  // `vercel logs` exits cleanly with no output both when nothing happened in the
-  // hour and when it could not really read anything. Those must not look alike —
-  // waiting and broken are different states (§2.1). whoami fails loudly when the
-  // login has lapsed, so a clean exit below is a real, authenticated read.
-  execFileSync(bin, ["whoami"], { cwd: REPO, timeout: 60_000, stdio: "ignore" });
-  return execFileSync(bin, ["logs", "--environment", "production", "--json", "--limit", "500"], {
-    cwd: REPO, encoding: "utf8", timeout: 120_000, stdio: ["ignore", "pipe", "ignore"],
-  }).split("\n");
+  // Telemetry and the update check are network calls this job does not need,
+  // and a call with no terminal attached is one that can hang. Measured: a run
+  // under launchd timed out once (2026-09-13 20:37Z) where the same binary,
+  // run directly, answered whoami in 2-3 seconds. The cause was not established.
+  const env = { ...process.env, VERCEL_TELEMETRY_DISABLED: "1", NO_UPDATE_NOTIFIER: "1" };
+  const run = (argv, timeout) => execFileSync(bin, argv, {
+    cwd: REPO, env, encoding: "utf8", timeout, stdio: ["ignore", "pipe", "ignore"],
+  });
+  const attempt = () => {
+    // `vercel logs` exits cleanly with no output both when nothing happened in
+    // the hour and when it could not really read anything. Those must not look
+    // alike — waiting and broken are different states (§2.1). whoami fails
+    // loudly when the login has lapsed, so a clean read below is a real one.
+    run(["whoami"], 60_000);
+    return run(["logs", "--environment", "production", "--json", "--limit", "500"], 120_000);
+  };
+  // One retry inside the run. Runs are twenty minutes apart inside a one-hour
+  // window, so a single stall already loses no evidence; retrying keeps one
+  // stall from counting toward the three-in-a-row alarm and crying wolf.
+  let out;
+  try { out = attempt(); } catch { out = attempt(); }
+  return out.split("\n");
 }
 
 /**
