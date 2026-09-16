@@ -1,4 +1,4 @@
-{"timestamp": 1789328875832, "message": "capture-caller rejected unknown", "logs": [{"message": "capture-caller rejected unknown"}]}
-{"timestamp": 1789328875663, "message": "capture-caller legacy", "logs": [{"message": "capture-caller legacy"}]}
-{"timestamp": 1789328875329, "message": "capture-caller adhd", "logs": [{"message": "capture-caller adhd"}]}
-{"timestamp": 1789328874992, "message": "Legacy server listening...", "logs": [{"message": "Legacy server listening..."}, {"message": "capture-caller fnd"}]}
+{"timestamp": 1789328875832, "requestPath": "/api/parse", "message": "capture-caller rejected unknown", "logs": [{"message": "capture-caller rejected unknown"}]}
+{"timestamp": 1789328875663, "requestPath": "/api/parse", "message": "capture-caller legacy", "logs": [{"message": "capture-caller legacy"}]}
+{"timestamp": 1789328875329, "requestPath": "/api/parse", "message": "capture-caller adhd", "logs": [{"message": "capture-caller adhd"}]}
+{"timestamp": 1789328874992, "requestPath": "/api/parse", "message": "Legacy server listening...", "logs": [{"message": "Legacy server listening..."}, {"message": "capture-caller fnd"}]}

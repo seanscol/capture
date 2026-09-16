@@ -72,3 +72,76 @@ test("the state it keeps holds no request times", () => {
   const kept = JSON.stringify({ ...s, movedAt: undefined });
   for (const t of requestTimes) assert.ok(!kept.includes(String(t)), `request time ${t} kept in state`);
 });
+
+// --- waiting, or cannot see (§2.1) ------------------------------------------
+//
+// Added 2026-09-16, with Sean's yes, after three days in which the watcher saw
+// nothing at all. Silence then meant two things — no capture reached the
+// service while it was reading, or captures reached it and it could not see
+// them — and only one of those is safe. These tests hold the two apart.
+
+const HOUR = 60 * 60_000;
+const probeTime = Math.min(...obs.map((o: { t: number }) => o.t));
+const LATER = probeTime + HOUR;
+
+/** A real record — FND's cold start — with its caller line removed. This is
+ *  what a real request looks like to a watcher that cannot see the line. */
+const unmarkedRecord = (() => {
+  const real = lines.map((l) => (l.trim() ? JSON.parse(l) : null)).find((r) =>
+    r && r.logs.some((x: { message: string }) => x.message === "capture-caller fnd"));
+  return JSON.stringify({ ...real, logs: real.logs.filter((x: { message: string }) => !x.message.startsWith("capture-caller")) });
+})();
+
+test("capture requests after the move are recorded as traffic, and seeing them is not blindness", () => {
+  const s = apply(fresh({ adhd: BEFORE_PROBES }), observations(lines, LATER));
+  assert.equal(s.trafficSeenAfterMove, true);
+  assert.equal(s.blindAfterMove, undefined, "Every one of these carried its caller line.");
+});
+
+test("a capture request with no caller line means the watcher cannot see", () => {
+  const s = apply(fresh({ adhd: BEFORE_PROBES }), observations([unmarkedRecord], LATER));
+  assert.equal(s.blindAfterMove, true,
+    "While logging is on, every request the service handles writes one line. " +
+    "A request with none is the watcher looking at the wrong thing, and if that " +
+    "reads as waiting it waits forever.");
+});
+
+test("...but not while the request is too new for its line to have arrived", () => {
+  // A request row and its log lines are delivered separately. Judged too soon,
+  // a request that did log looks as though it did not — a false alarm, and a
+  // watcher that cries wolf gets ignored like one that stays silent.
+  const tooSoon = probeTime + 60_000;
+  const s = apply(fresh({ adhd: BEFORE_PROBES }), observations([unmarkedRecord], tooSoon));
+  assert.equal(s.blindAfterMove, undefined);
+  assert.equal(s.trafficSeenAfterMove, true, "It is still traffic; it just is not judged yet.");
+});
+
+test("requests from before any app moved count as neither traffic nor blindness", () => {
+  const s = apply(fresh({ adhd: AFTER_PROBES }), observations([unmarkedRecord, ...lines], LATER));
+  assert.equal(s.trafficSeenAfterMove, undefined);
+  assert.equal(s.blindAfterMove, undefined);
+});
+
+test("a request to any other path is neither", () => {
+  // A favicon or a scanner hitting the root has no reason to carry a caller
+  // line; counting it would raise the alarm over nothing.
+  const other = JSON.stringify({ ...JSON.parse(unmarkedRecord), requestPath: "/favicon.ico" });
+  const s = apply(fresh({ adhd: BEFORE_PROBES }), observations([other], LATER));
+  assert.equal(s.trafficSeenAfterMove, undefined);
+  assert.equal(s.blindAfterMove, undefined);
+});
+
+test("no capture requests at all is waiting, and says nothing", () => {
+  const s = apply(fresh({ adhd: BEFORE_PROBES, fnd: BEFORE_PROBES }), observations([], LATER));
+  assert.equal(s.trafficSeenAfterMove, undefined);
+  assert.equal(s.blindAfterMove, undefined);
+  assert.equal(s.ready, false);
+});
+
+test("the new facts hold no request times either", () => {
+  const s = apply(fresh({ adhd: BEFORE_PROBES }), observations([unmarkedRecord, ...lines], LATER));
+  const kept = JSON.stringify({ ...s, movedAt: undefined });
+  for (const o of observations([unmarkedRecord, ...lines], LATER)) {
+    assert.ok(!kept.includes(String(o.t)), `request time ${o.t} kept in state`);
+  }
+});

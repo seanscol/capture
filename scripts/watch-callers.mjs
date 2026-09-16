@@ -101,7 +101,16 @@ function readLogLines() {
  * an app used a few times a day is most of them, and this would wait forever
  * while looking healthy.
  */
-export function observations(lines) {
+/**
+ * How old a request must be before its missing caller line counts against the
+ * watcher. A request row and its log lines are delivered separately; read too
+ * soon, a request that did log can look as though it did not. PLACEHOLDER
+ * (§5.7) — ten minutes is generous against a delay measured in seconds, and a
+ * request this old is still read twice more inside the hour.
+ */
+const SETTLE_MS = 10 * 60_000;
+
+export function observations(lines, now = Date.now()) {
   const out = [];
   for (const line of lines) {
     if (!line.trim()) continue;
@@ -117,6 +126,19 @@ export function observations(lines) {
     // The time is used to decide what counts and then dropped. It is never
     // written anywhere: this watcher keeps whether, not when.
     for (const name of names) out.push({ name, t: record.timestamp });
+
+    // "Waiting" and "cannot see" must not look the same (§2.1). Every request
+    // the service handles writes exactly one caller line while logging is on,
+    // so a capture request with none means this watcher is not looking at what
+    // it thinks it is — the switch is off, or requests fail before the
+    // service's code runs. And a capture request at all is what separates
+    // "nothing happened" from "something happened and I saw it".
+    if (record.requestPath === "/api/parse") {
+      out.push({ name: "traffic", t: record.timestamp });
+      if (names.size === 0 && now - record.timestamp >= SETTLE_MS) {
+        out.push({ name: "unmarked", t: record.timestamp });
+      }
+    }
   }
   return out;
 }
@@ -148,8 +170,12 @@ export function apply(state, obs) {
     if (obs.some((o) => o.name === "legacy" && o.t >= last)) state.legacyAfterAllMoved = true;
   }
   const first = Math.min(...Object.values(moved));
-  if (Number.isFinite(first) && obs.some((o) => /^rejected:(unknown|duplicate)$/.test(o.name) && o.t >= first)) {
-    state.rejectedAfterMove = true;
+  if (Number.isFinite(first)) {
+    const after = (name) => obs.some((o) => o.name === name && o.t >= first);
+    if (obs.some((o) => /^rejected:(unknown|duplicate)$/.test(o.name) && o.t >= first)) state.rejectedAfterMove = true;
+    // Whether, never when — the same rule as `seen`.
+    if (after("traffic")) state.trafficSeenAfterMove = true;
+    if (after("unmarked")) state.blindAfterMove = true;
   }
   state.ready = allMoved && EXPECTED.every((n) => state.seen[n]);
   return state;
@@ -250,6 +276,30 @@ function main() {
   \`CAPTURE_LOG_CALLERS\`, redeploy, and remove this watcher — its launchd job
   \`com.sean.capture-caller-watch\`, \`capture/.caller-migration.json\`, and this note.
   `);
+  }
+
+  if (!state.ready && state.blindAfterMove) {
+    note(`# capture — the caller watcher cannot see what it is waiting for
+
+_Written by \`capture/scripts/watch-callers.mjs\`. It keeps no times._
+
+Requests reached the capture service after both apps moved, and at least one
+carried **no caller line**. While \`CAPTURE_LOG_CALLERS\` is on, every request
+the service handles writes exactly one — so this watcher is not waiting, it is
+blind, and step 3's evidence cannot arrive this way.
+
+Two causes fit, with different fixes:
+
+- **The logging switch is off** in the deployment serving production. Check
+  \`CAPTURE_LOG_CALLERS\` in the service's environment, and that the live
+  deployment was built after it was set.
+- **Requests are failing before the service's own code runs** — a crash on
+  start, or a platform error. Any capture that failed that way fell back to its
+  app's word rules and said so.
+
+The migration is still safe: the shared secret is still accepted. Checking needs
+Sean's Terminal — a sandboxed session cannot run \`vercel\`.
+`);
   }
 
   writeFileSync(STATE, JSON.stringify(state, null, 2));
