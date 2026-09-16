@@ -375,3 +375,50 @@ This block is copied into every repo by `~/bin/sync-shared-files.sh` from
 `ecosystem/shared/blocks/load-is-clinical.md`. Change it there, not here:
 an edit here is drift, and the script will replace it.
 <!-- /shared:load-is-clinical -->
+
+<!-- shared:sessions-are-sandboxed -->
+### Sessions run in a sandbox — a refusal is deliberate
+
+`[SEAN 2026-09-16]` Claude Code runs under managed settings on his Mac
+(`/Library/Application Support/ClaudeCode/managed-settings.json`). The source and
+the full reasoning are in `~/Projects/ecosystem/machine-sandbox.md`. A repo's own
+settings cannot undo it. It applies to the commands a session runs, never to
+Sean's own Terminal, and only to sessions started after it was installed — so a
+session that can still reach a blocked path needs restarting, not debugging.
+
+**If one of these is refused, do not debug it and do not route around it:**
+
+- **Credentials:** the Vercel CLI login, `~/.config/app-backup`,
+  `~/.config/media-app`, `~/.config/routine`. So `vercel` fails inside a session,
+  and so do media's and routine's scripts that read `~/.config`. Propose the exact
+  line for the Terminal tool, which asks Sean each time, or ask him to run it.
+  `vercel env ls` output is safe to share: values print as `Hidden`.
+- **Transcripts:** `~/.claude/projects/**/*.jsonl`, cross-session searches
+  included. Memory files and saved tool outputs still read.
+- **Writes outside `~/Projects`, `~/bin` and `~/.npm`**, and writes to this
+  repo's own `.claude/` settings and hooks. Another repo's hooks stay writable, so
+  a changed copy of a shared hook is caught by the drift test, not prevented.
+- **Network, domain by domain.** `git fetch` and `git push` to github.com have
+  been refused with `CONNECT tunnel failed, response 403` beside a sandbox note
+  that the host "is not on the allow list". That is the sandbox, not GitHub:
+  GitHub's own refusal reads `Write access to repository not granted`. Ask Sean
+  to push from his Terminal.
+
+**Three refusals that look like bugs** (found 2026-09-16):
+
+- **`npx tsx` — so `npm test` in every repo — fails** with
+  `listen EPERM … tsx-<uid>/<pid>.pipe`: the tsx command opens a local socket the
+  sandbox refuses. `node --import tsx --test tests/*.test.ts` runs the same tests
+  without one; the same goes for a test that starts `npx tsx` in a subprocess.
+- **`diff <(…) <(…)`** fails with `/dev/fd/…: Operation not permitted`. Write each
+  side to a file in `$TMPDIR` and diff the files.
+- **`ERROR: failed to copy trust settings of system certificate`**, printed by
+  npx commands, is noise: the command still runs. Read its exit code.
+
+To check whether the sandbox is on, use the probe in `machine-sandbox.md`, never
+by reading a credential. A check must be able to produce the failing answer.
+
+This block is copied into every repo by `~/bin/sync-shared-files.sh` from
+`ecosystem/shared/blocks/sessions-are-sandboxed.md`. Change it there, not here:
+an edit here is drift, and the script will replace it.
+<!-- /shared:sessions-are-sandboxed -->
