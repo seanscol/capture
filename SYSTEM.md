@@ -1,6 +1,6 @@
 # SYSTEM.md — Sean's personal app ecosystem
 
-**Version 3.5 · 2026-09-08** — FND is wired to the capture service; §2A.1
+**Version 3.8 · 2026-09-16** — FND is wired to the capture service; §2A.1
 moved by decision, §2.4 now enforceable in FND, correction 22 closed. v3.0
 was: — supersedes v2.8, which was **issued twice with
 different content**: the planning chat revised it an hour later without
@@ -251,6 +251,18 @@ also lands on the task app's data. `[ADHD-chat]`
 > The cheap error is preparing for a September that was noise; the
 > expensive one it guards against is the reverse.
 >
+> **Extended again 2026-09-16** `[SEAN]`, on the global session's question,
+> asked before building rather than after: **the amendment covers a daily
+> model-written synthesis, not only the deterministic physical-record layer.**
+> The constraints already agreed are the terms of the grant, not commentary on
+> it — every observation labelled a suggestion, citing the data it came from,
+> printing its n; at most one a day and none if nothing clears the bar; one
+> weekly digest that says nothing when it has nothing; facts and not verdicts;
+> dismissals durable. The alternative considered and rejected was a templated
+> synthesis assembled from rules, which is reliable and cannot say *"you've
+> mentioned climbing eleven times and there's a gym five minutes away"* — the
+> thing the layer exists for.
+>
 > **What survives, unmoved: FND is the sole authority on present capacity.**
 > Nothing computes a rival verdict on how much he can do today, nothing
 > modifies or reweights FND's numbers, and §2.6 stands — noticing a past
@@ -268,6 +280,17 @@ the structural answer. `[PROPOSED]`
 
 Decided and load-bearing, but decisions — change them by deciding
 differently, not by agent judgement.
+
+**2.8 Load off his brain is a clinical requirement, not a preference.**
+`[SEAN 2026-09-13]` His neuropsychiatrist describes freeing processing
+capacity as part of FND recovery. **The design test for every feature: does
+it remove load or add it?** Anything requiring him to check, triage or
+remember is on the wrong side, however useful it looks. His own statement of
+the constraint: *"I have an ADHD brain and I'm building a normal one. I can't
+single out individual things from a mass, can't prioritise among many
+important things, can't do one thing at a time when everything is present,
+and lose track of practical things."* **Any feature that hands him a list to
+triage has failed.**
 
 **2A.1 FND is frozen with respect to other apps, not with respect to
 Sean.** His own development of FND continues normally and this document
@@ -290,7 +313,17 @@ acquiring a dependency, not a feature. `[SEAN]` `[FND-chat]`
 > different ways. The clause forbidding other apps writing to FND is
 > unchanged and inviolate. `[FND-chat 2026-09-07]`
 
-**2A.2 The FND tracker and the ADHD task app do not interact.** No calls,
+**2A.2 The FND tracker and the ADHD task app do not interact at runtime.**
+`[AMENDED SEAN 2026-09-16]` The original sentence said *"at all"*, and the
+shared drift check now shells `git -C ~/Projects/adhd-tasks show HEAD:…`, so
+that sentence no longer described the code. **Ruled acceptable and the text
+changed to match:** nothing executes, no data is exchanged, neither app learns
+anything about the other's contents, and it happens at test time on one
+laptop. §3.1's stated worry was a coding bug interacting, which this is not.
+**Recorded as accepted cost, not zero cost:** `npm test` gates shipping, so a
+commit in `media` can turn FND's suite red for something FND cannot fix.
+
+**Beyond that, the prohibition stands.** No calls,
 no shared storage, no modelling of physical condition in the task app.
 `[NEXT §7]` See §3.1. The *global* app may join FND and task data under
 §12 D2 and §2.7; nothing there loosens this.
@@ -471,6 +504,17 @@ contract worked and the thing he uses daily was unchanged. `[ADHD-chat
 | `GET` | `/api/widget` | Small, cheap, read-only summary. |
 | `POST` | `/api/quick` | Capture one line. **Always echoes back exactly what it recorded.** |
 
+**5.4a The capture service has two callers, not three.** `[capture-chat
+2026-09-13]` `fnd-tracker` and `adhd-tasks`. Routine never called it — its
+`/api/quick` is named for logging a line, which misled the planning chat into
+recording three for several versions. **Per-caller tokens replace the single
+shared secret:** the service accepts any named secret matching a prefix, so
+adding or revoking a caller is a settings change. It refuses all requests if
+two callers are given the same value, because otherwise revoking one would
+silently fail. Deletion of the old shared secret waits until each caller has
+been *seen* using its own name — absence of use is not evidence of migration
+(§2.1).
+
 **5.5 Direction of dependency.** Apps never read each other. Only the
 global app reads across, read-only. For FND the endpoints that matter are
 **`/api/digest`** (a day as structured facts — *"everything an author would
@@ -530,6 +574,32 @@ status see `NEXT-STEPS.md`, not this section.
 > 2026-09-04. The same request returned `200 {"ok":true}` the previous day.
 > Every writer — Shortcuts, Back Tap, the app itself — was given its
 > credential first and confirmed logging afterwards.
+
+**A set of named tokens, never a fallback between them.** `[SEAN 2026-09-09]`
+Settled across all three apps after FND, routine and global diverged. Two
+things that look alike and are not:
+
+- **A set is correct.** `[widgetToken(), integrationToken(), globalToken()]
+  .filter(Boolean)` — several named credentials accepted, removing any one
+  leaves the others working. That *is* per-token revocation, and it is what
+  three tokens are for.
+- **A fallback is not.** `WIDGET_TOKEN ?? CRON_SECRET` meant that while
+  `WIDGET_TOKEN` was unset, anyone holding the cron secret could read
+  `/api/export` — the whole record in one request. **One secret doing two
+  unrelated jobs is what the second and third tokens exist to end.** Removed
+  from FND 2026-09-09; routine and global never had it. `[FND-chat]`
+
+**Unset means unset.** Adjacent to finding 19 but not the same family: 19
+was fail-open to *nothing*; this was a named substitution with a comment and
+a test behind it. The consequence differs — silence there, a different
+secret here — and the second is what decided it.
+
+**Three read tokens, three apps.** `WIDGET_TOKEN` (phone: Shortcuts,
+Scriptable) · `INTEGRATION_TOKEN` (the backup) · `GLOBAL_TOKEN` (the global
+app). FND, routine and global each carry their own set. **Routine's scope is
+the pattern to copy:** GET only, and only routes on a named list — so a route
+added later is closed until someone names it, rather than *"everything except
+the ones I remembered"*. `[routine-chat 2026-09-08]`
 
 **`INTEGRATION_TOKEN` rather than `WIDGET_TOKEN` for the backup**, though
 the latter was already set. `WIDGET_TOKEN` lives on the phone; sharing it
@@ -766,6 +836,43 @@ both casts here were unnecessary — `tsc` was clean without them, so the
 silencing bought nothing. And it is bug family (c) once more: the
 verification shared the assumption it existed to test.
 
+**(s) A default that is correct in development and catastrophic in
+production.** `process.env.STORAGE_BACKEND ?? "local"` in four repos. Unset
+in production means the filesystem adapter runs on Vercel: **writes are
+accepted, success is reported, and the disk vanishes on the next deploy.**
+§7(a) with the health record as the payload. Distinct from (m) — nobody chose
+that default; someone chose this one, and it is right locally. **The fault is
+that its correctness depends on where it runs and nothing checked where it
+was running.** `[FND-chat, ADHD-chat, routine-chat 2026-09-09]`
+
+The fix, now in all four: **fail at module load, not at first write** — a
+deployment that cannot say where its data goes should refuse to serve, since
+down is recoverable and a day of logs on ephemeral disk is not. And **a
+positive condition**: throw unless we can prove this is a developer machine,
+requiring *both* no `VERCEL` and `NODE_ENV !== "production"`, because either
+alone is one value away from calling a deployment local. A build that throws
+fails, and **Vercel promotes nothing from a failed build**, so a misconfigured
+deploy never reaches production. It also closes a case the old line never
+had: any value that was not exactly the accepted string fell through
+silently, so a one-character typo was a downgrade rather than a refusal.
+
+Two rules fell out of it. **Deploy order: push first, then move the
+variable** — the reverse lets old code see a value it doesn't recognise and
+quietly select the filesystem, which is the failure being closed, caused by
+closing it. And when two apps disagree on a constant, **the one with least to
+lose moves**: `vercel_kv` beat the better name `redis` because FND was
+already live with it against the health record, and global had never
+deployed.
+
+**(t) A comment describing a hazard instead of a check preventing it.**
+Global's storage module carried, verbatim: *"PRODUCTION NEEDS
+STORAGE_BACKEND. Without it the filesystem adapter runs on Vercel, writes go
+to an ephemeral disk and vanish, and the app looks like it works while losing
+everything."* Directly above the `?? "local"` that caused it. Third instance
+of a comment documenting the exact bug it sits above — see also `res.blob()`
+and the `@AGENTS.md` import. **If you can write the comment, you can write
+the check.** `[global-chat 2026-09-09]`
+
 ### Practices that worked `[FND §7]`
 
 - Tests read **real stored entries** — never writing to real storage.
@@ -775,6 +882,66 @@ verification shared the assumption it existed to test.
 - **Commit messages explain the failure**, not the change.
 - **When a model changes, replay it over real history** and print
   before/after.
+
+**A check must be able to produce the failing answer.** If no reachable state
+makes it say *"not blocked"*, it is not a check. `[SEAN 2026-09-16]` Three
+instances in one week, all failing in §2.1's direction — absence read as good
+news. `head -c0` printed *blocked* regardless, because BSD `head` rejects a
+zero byte count before opening the file. The same check in Sean's own Terminal
+printed *READABLE* forever, because his shell is never sandboxed and was
+answering a different question. And a probe reading a real credential was
+refused by the permission rule and the classifier **before the sandbox was
+ever exercised**, so the refusal proved nothing about the layer being tested.
+
+Two corollaries, both earned the hard way:
+
+- **A security test that requires reading the thing it protects is the wrong
+  test.** It is refused by the protection itself, and a refusal says nothing
+  about *which* layer refused.
+- **A probe proves the mechanism, not the contents.** Demonstrating that a
+  deny list is enforced says nothing about which paths are on it. Mechanism
+  plus a reading of the live configuration gives the conclusion; the probe
+  alone asserting it would be a fourth instance of this family.
+  `[global-chat 2026-09-16]`
+
+**This is the general form of what §7 keeps rediscovering**, and it covers
+(r)'s test that counted rather than located, (o)'s suite passing on a tree
+that did not contain the test, and a storage guard that checked the wrapper
+adds a prefix rather than that the wrapper is the only way in.
+
+**Prove your tests catch breakage rather than trusting a green run.** FND ran
+eight new tests against the *old* code with the export present, so failures
+were behavioural rather than import errors: **six failed and two passed, and
+that signature is the point** — the two that passed guard what must keep
+working, and eight failures would have meant the tests asserted something
+wrong. Routine broke its own fix five ways and confirmed all five were caught.
+`[FND-chat, routine-chat 2026-09-09]`
+
+**A subprocess test needs both halves.** Asserting that a bad config throws is
+not enough: a subprocess failing for an unrelated reason — bad path, missing
+dependency — makes that assertion pass for the wrong reason. **Assert that a
+valid config succeeds in the same harness.** `[routine-chat 2026-09-09]`
+
+### The move protocol `[SEAN 2026-09-08, restated 2026-09-12]`
+
+**It existed only as a pointer until v3.8.** §13.7 and DECISIONS 3.5 both
+cited *"(move protocol, §7)"* and §7 contained nothing of the kind;
+`check-refs.py` passed because §7 exists. **Bug family (l) in the
+specification itself** — a reference that resolves to a section that does not
+contain the thing. `[global-chat 2026-09-16]`
+
+In his words: *"nothing is removed until its destination exists, holds the
+data, and I've verified it there."* Four conditions, all of them, before
+anything is removed:
+
+1. **The destination exists** — deployed, not planned.
+2. **It holds the data** — copied, not scheduled to be copied.
+3. **Sean has verified it there** — his check, not a passing test.
+4. **Until then both copies run and the old one is authoritative.**
+
+The backup's fetch-to-`.incoming`-then-`mv`, applied to features. A move that
+fails must leave the original intact — bug family (n) generalised: **a failure
+that destroys what it was moving is worse than a failure that stops.**
 
 Two more, earned on 2026-09-03 and both about *how you check*:
 
@@ -900,7 +1067,19 @@ Recovery Log as a grid and says when a column has gone quiet, never how long
 since he did anything. *Questions* asks two a day about what the app doesn't
 know, and skipping costs nothing.
 
-### Routine — next to build; deliberately the simplest app
+### Routine — MERGING INTO GLOBAL, 2026-09-13
+
+**`[SEAN]` Routine folds into the global app, not the task app.** An earlier
+decision merged it into `adhd-tasks`; reversed the same week on use evidence.
+His reason: *"the sequence is a morning and bedtime thing, not a
+middle-of-the-day thing"* — tasks fill the middle, so the sequence belongs
+with the morning brief rather than beside the task list. **Not a tab: woven
+in.** Opening global shows today's calendar, new email, and the stage he is
+on; opening global *is* starting the day, which answers the day-anchor
+question without a separate tap. Move protocol applies (§7): routine's data
+stays live until global holds it and he has verified it there.
+
+### Routine — as built
 
 Says *do this now*, then the next. Not a list. Fun icons. *"There's nothing
 about it that needs to be more than that."* `[SEAN]`
@@ -1492,7 +1671,61 @@ weakens it — it is the *editing* that forks, not the checking.
    labelled and cited. §5.5 needs no change: global was always the
    sanctioned cross-reader; the backup script stays the only exception.
 6. **Media.** Optional, unscheduled.
-7. **Global, phase 2 — synthesis, and the non-task areas.** **Community and
+7. **Global, phase 2 — synthesis, and the non-task areas.** **Three
+   noticing mechanisms** `[SEAN 2026-09-13]`, from his own missed cases:
+   **(a) dates he loses track of** — festival and agent deadlines, captured
+   by voice the second he hears one; biggest by count, least clever.
+   **(b) things he did not know existed** — he missed PIP for months; also
+   disability rail card, Access to Work, council tax reduction, blue badge,
+   PhD disability funding. **Not noticed from data: a checklist run once
+   against facts about his situation.** **(c) complaints become standing
+   questions** — recorded by daily dictation, dated, **never closing on a
+   single "no"**. *"Spending too much on Ubers"* plus statements showing
+   £1000 to one destination is a question about bus routes; he found out
+   after a year. Complaints persist, cross-reference against the data, and
+   are asked back in the app's own time rather than at the moment of
+   complaint. **Why this beats him asking a chatbot: he would have to know
+   it was worth asking, remember to ask, and supply the context — the three
+   barriers that stopped him each time.**
+
+   **Patterns live in the gap between sources.** Promises made in email and
+   never converted; finished work matched to open calls; drift against his
+   own past; things expiring; recurring costs where a one-off alternative
+   breaks even; single points of failure; sunk investment unused; silence
+   where something regular stopped; recurrence with no action; anomaly with
+   explanations ruled out; sequencing errors. **Ruling out matters as much
+   as noticing** — missed bills are only interesting once mania and money
+   are excluded. Surfaced as **a fact and a fact, never a verdict**:
+   *"mentioned climbing 11 times since March; there's a gym five minutes
+   away"*, never *"you're avoiding climbing"*.
+
+   **Rate, enforced not permitted:** at most **one observation a day**, none
+   if nothing clears the bar; **one weekly digest**, each area at most one
+   line, **saying nothing if it has nothing new**. §9: a checker that
+   reports every day is one he learns to ignore, so **a digest with three
+   empty areas is the digest working**. **Dismissals are durable** — declining
+   climbing at 11 must not return it at 12. Every observation prints its
+   numbers (§6).
+
+   **The daily dictation is the missing input and the only one he can
+   provide.** Via the capture service: *"what was annoying today"*, *"spent
+   £14 on an Uber"*. Recorded, not solved.
+
+   **Index everything, surface almost nothing.** Location, browsing history
+   and the Gmail archive go into a search index that the synthesis layer
+   cannot read. **Storage is cheap and low-risk; surfacing is where the harm
+   is.** The Gmail archive is the wrong shape for the live question anyway —
+   what he wants from email is a bounded read of what arrived since he last
+   looked, not a decade of correspondence.
+
+   **The prompt-injection line, and it is structural.** Once anything parses
+   text other people wrote — email, calendar entries, PDFs — **a model's
+   output is displayed and never executed**: no tool calls, no fetches, no
+   writes triggered by it. Enforced by a test that fails if any module
+   outside the designated folder calls a model, and by a further test that
+   pushes a planted instruction through the whole path and asserts nothing
+   changed. `[global-chat 2026-09-13]` **A comment describing this hazard
+   instead of a check preventing it is family (t).** **Community and
    treatment move here from the task app** `[SEAN 2026-09-08]`: *"they
    aren't tasks, and framing them as tasks is part of the issue"* —
    socialising and treatment made task-shaped become more things to do,
@@ -1509,7 +1742,12 @@ weakens it — it is the *editing* that forks, not the checking.
    not before, and phase 1 shipping does not move them.**
 
 **A second ecosystem exists and this document does not govern it.** `[SEAN
-2026-09-08]` Creative work — corpus, YouTube, PhD, films, its own global —
+2026-09-08, renamed 2026-09-13]` **It is the CREATIVE ecosystem, not the
+"work" ecosystem** — the earlier name was ambiguous and caused exactly the
+confusion it predicted. **Creative = film, writing, YouTube, the musical, the
+book.** Everything else is life, **including work in the ordinary sense**:
+teaching, the Tara course, admissions tutoring, income. Those stay in the
+task app's `work` area and do not leave. Creative work — corpus, YouTube, PhD, films, its own global —
 is a separate project with *"different rules, different principles,
 different ethos"*, deliberately not health-linked. Projects leave the task
 app for it, under the move protocol (§7). A channel or meta-app joining the

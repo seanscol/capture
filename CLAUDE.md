@@ -158,6 +158,18 @@ also lands on the task app's data. `[ADHD-chat]`
 > The cheap error is preparing for a September that was noise; the
 > expensive one it guards against is the reverse.
 >
+> **Extended again 2026-09-16** `[SEAN]`, on the global session's question,
+> asked before building rather than after: **the amendment covers a daily
+> model-written synthesis, not only the deterministic physical-record layer.**
+> The constraints already agreed are the terms of the grant, not commentary on
+> it — every observation labelled a suggestion, citing the data it came from,
+> printing its n; at most one a day and none if nothing clears the bar; one
+> weekly digest that says nothing when it has nothing; facts and not verdicts;
+> dismissals durable. The alternative considered and rejected was a templated
+> synthesis assembled from rules, which is reliable and cannot say *"you've
+> mentioned climbing eleven times and there's a gym five minutes away"* — the
+> thing the layer exists for.
+>
 > **What survives, unmoved: FND is the sole authority on present capacity.**
 > Nothing computes a rival verdict on how much he can do today, nothing
 > modifies or reweights FND's numbers, and §2.6 stands — noticing a past
