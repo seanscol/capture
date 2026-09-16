@@ -416,14 +416,26 @@ session that can still reach a blocked path needs restarting, not debugging.
   GitHub's own refusal reads `Write access to repository not granted`. Ask Sean
   to push from his Terminal.
 
-**Three refusals that look like bugs** (found 2026-09-16):
+**`$TMPDIR` is one folder shared by every session.** Never write a fixed name
+there. Routine's and the task app's sessions wrote a backup under the same name at
+the same moment, and routine's storage file was briefly replaced by the task
+app's. Use your session's scratchpad or a folder made with
+`mktemp -d "$TMPDIR/<repo>.XXXXXX"`, and check any file restored from a temporary
+copy against git before trusting it (`git diff -- <file>` shows what the restore
+changed).
+
+**Four refusals that look like bugs** (found 2026-09-16):
 
 - **`npx tsx` — so `npm test` in every repo — fails** with
   `listen EPERM … tsx-<uid>/<pid>.pipe`: the tsx command opens a local socket the
   sandbox refuses. `node --import tsx --test tests/*.test.ts` runs the same tests
   without one; the same goes for a test that starts `npx tsx` in a subprocess.
+- **`mktemp` with no template** fails with `mkstemp failed on /var/folders/…:
+  Operation not permitted`: without a template it ignores `$TMPDIR`. Always give
+  it one, `mktemp "$TMPDIR/<name>.XXXXXX"`, and stop if it fails — a script that
+  carried on used an empty path.
 - **`diff <(…) <(…)`** fails with `/dev/fd/…: Operation not permitted`. Write each
-  side to a file in `$TMPDIR` and diff the files.
+  side to a file in a folder `mktemp -d` made, and diff the files.
 - **`ERROR: failed to copy trust settings of system certificate`**, printed by
   npx commands, is noise: the command still runs. Read its exit code.
 
