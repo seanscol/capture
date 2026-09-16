@@ -33,6 +33,35 @@ from pathlib import Path
 
 FND_HOST = "fnd-tracker.vercel.app"
 
+# Every app's own live host, read from the "**Live:**" line each repo's CLAUDE.md
+# already carries, rather than listed here.
+#
+# [SEAN 2026-09-12] "The guard exists" was true of one repo in six. adhd-tasks
+# made real production writes on 12 September — POST /api/review changing six
+# tasks' areas, POST /api/nudge changing three cadences — with nothing stopping
+# them, because this gated on FND's host alone. Reading the hosts from where
+# each repo declares them means a new app is covered the moment it says it is
+# live, and a repo that names no host yet (global, until it deploys) is visibly
+# ungoverned in its own CLAUDE.md rather than invisibly ungoverned in here.
+LIVE_LINE = re.compile(r"\*\*Live:\*\*\s*`([^`]+)`")
+
+
+def live_hosts():
+    """host -> the app it belongs to. FND is always in, whatever its file says."""
+    hosts = {FND_HOST: "fnd-tracker"}
+    for claude_md in sorted(_spec.PROJECTS.glob("*/CLAUDE.md")):
+        found = LIVE_LINE.search(claude_md.read_text(encoding="utf-8", errors="ignore"))
+        if not found:
+            continue
+        host = found.group(1).strip()
+        # A repo with nothing deployed says so in that line, in the same place
+        # a host would go. "none" is a declaration, not a hostname: treating it
+        # as one would block every command containing the word.
+        if host.lower() in ("none", "not deployed", "n/a"):
+            continue
+        hosts[host] = claude_md.parent.name
+    return hosts
+
 # Which files are spec files is defined once, in _spec.py. This hook used to
 # spell them out in a regex of its own, so operating-notes.md — part of the
 # spec under §4A — walked through the side door this hook exists to shut.
@@ -124,10 +153,17 @@ except (json.JSONDecodeError, ValueError):
 cmd = payload.get("tool_input", {}).get("command", "")
 cwd = Path(payload.get("cwd") or ".")
 
-if FND_HOST in cmd and WRITE_METHOD.search(cmd):
+hit = next(((host, app) for host, app in live_hosts().items() if host in cmd), None)
+if hit and WRITE_METHOD.search(cmd):
+    host, app = hit
+    what = (
+        f"a write against {host}, which is a live medical record"
+        if host == FND_HOST
+        else f"a write against {host}, which is {app}'s live app"
+    )
     sys.stderr.write(
         "BLOCKED by §7 (no production-write diagnostics): this command looks like "
-        f"a write against {FND_HOST}, which is a live medical record.\n\n"
+        f"{what}.\n\n"
         "Before any diagnostic that writes to production, establish that no "
         "read-only proof exists — a search obligation, not a preference. For "
         "'are the write endpoints open', the read-only proof is an "
