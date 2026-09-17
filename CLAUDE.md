@@ -407,10 +407,12 @@ session that can still reach a blocked path needs restarting, not debugging.
 **If one of these is refused, do not debug it and do not route around it:**
 
 - **Credentials:** the Vercel CLI login, `~/.config/app-backup`,
-  `~/.config/media-app`, `~/.config/routine`. So `vercel` fails inside a session,
-  and so do media's and routine's scripts that read `~/.config`. Propose the exact
-  line for the Terminal tool, which asks Sean each time, or ask him to run it.
-  `vercel env ls` output is safe to share: values print as `Hidden`.
+  `~/.config/media-app`, `~/.config/routine`, and `~/.config/global` (global's
+  live database address, since 2026-09-17). So `vercel` fails inside a session,
+  and so do media's and routine's scripts that read `~/.config`, and
+  `~/bin/global-import-statements`. Propose the exact line for the Terminal tool,
+  which asks Sean each time, or ask him to run it. `vercel env ls` output is safe
+  to share: values print as `Hidden`.
 - **Transcripts:** `~/.claude/projects/**/*.jsonl`, cross-session searches
   included. Memory files and saved tool outputs still read.
 - **Writes outside `~/Projects`, `~/bin` and `~/.npm`**, and writes to this
