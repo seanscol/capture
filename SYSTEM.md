@@ -1,6 +1,11 @@
 # SYSTEM.md — Sean's personal app ecosystem
 
-**Version 3.8 · 2026-09-16** — FND is wired to the capture service; §2A.1
+**Version 3.9 · 2026-09-17 — CORRECTIONS ONLY.** No new rules, nothing added.
+An external audit found eleven statements false about the system this file
+describes, several of which a session would act on, plus broken references and
+one fabricated citation. Those are fixed here and **nothing else changed.**
+The spec is then frozen for thirty days: decisions go to a dated ledger, not
+to a version. Previously: — FND is wired to the capture service; §2A.1
 moved by decision, §2.4 now enforceable in FND, correction 22 closed. v3.0
 was: — supersedes v2.8, which was **issued twice with
 different content**: the planning chat revised it an hour later without
@@ -238,9 +243,15 @@ also lands on the task app's data. `[ADHD-chat]`
 > **Extended 2026-09-08** `[SEAN]`: sanctioned sources become six — FND,
 > routine, nutrition, Fitbit, blood tests, and **phase history**, which may
 > be correlated with the other five. And one named chart: **observed manic
-> episode-days counted by day of year** — the instrument the archive itself
-> specifies (`operating-notes.md` item 5, *"mania chart"*), kept by hand for
-> ten years to anticipate and prepare. Constraints are part of the grant:
+> episode-days counted by day of year** — an instrument he has kept by hand
+> for ten years to anticipate episodes and prepare. **Correction, 2026-09-17:
+> v3.5 cited `operating-notes.md` item 5 as specifying a "mania chart". It
+> does not. The word "mania" does not appear in that file at all — the
+> citation was fabricated by the planning chat and put to Sean as evidence
+> that his own archive had already asked for this. Bug family (q), committed
+> by the chat that wrote (q), in quotation marks, in a decision touching
+> bipolar disorder. The decision stands on his direct statement and on
+> nothing else; it is worth re-examining without the invented support.** Constraints are part of the grant:
 > episode count printed on the chart, **no date highlighted as due, no
 > fitted periodicity drawn, no month coloured as safe**, hypomanic episodes
 > a separate series off by default. **The chart drives nothing** — sets no
@@ -523,7 +534,7 @@ need, nothing an author would decide"*), `widget`, `room`, `export`.
 own a store of its own (§12 Q9).
 
 **A link is not a read.** The routine app opening
-`adhd-tasks-mu.vercel.app/week` in a browser is not one app reading another:
+`«host — see LOCAL.md»/week` in a browser is not one app reading another:
 no data crosses, no dependency is created, and the task app still owns the
 answer. §5.5 and §2A.3 are untouched by it. Worth stating because the
 question came up and the instinct was to seek an exception where none was
@@ -1017,7 +1028,7 @@ Relapse prevention. **Never relapse to the start again.** The enemy is the
 ratchet: overload, don't stop, overload at a lower level, collapse. When a
 design choice is ambiguous, this is the tiebreak. `[FND §1]`
 
-- **Live:** `fnd-tracker.vercel.app` · **Repo:** `~/Projects/fnd-tracker`
+- **Live:** `«host — see LOCAL.md»` · **Repo:** `~/Projects/fnd-tracker`
   → `github.com/seanscol/fnd-tracker`
 - **Stack:** Next.js 16 PWA on Vercel, TypeScript, SWR, `node:test`,
   Recharts, Scriptable widget, Shortcuts + Back Tap → `/api/quick`.
@@ -1033,7 +1044,7 @@ design choice is ambiguous, this is the tiebreak. `[FND §1]`
 
 **What should I do right now?** Exactly one task, decided for him. `[NEXT]`
 
-- **Live:** `adhd-tasks-mu.vercel.app` · **Repo:** `~/Projects/adhd-tasks`
+- **Live:** `«host — see LOCAL.md»` · **Repo:** `~/Projects/adhd-tasks`
   → `github.com/seanscol/adhd-tasks` (private, history audited clean).
 - **Stack:** Next.js 16.3, TypeScript, Tailwind 4, SWR, `node:test`, Redis /
   JSON behind a namespaced `StorageAdapter`. Next 16 deprecates
@@ -1147,7 +1158,13 @@ discount evidence in January. If forward marks are wanted, show the
 observed distribution with the episode count printed on the chart, never a
 highlighted date. `[PROPOSED]`
 
-### Media — not built
+### Media — LIVE since 2026-09-11
+
+**Correction 2026-09-17:** this section said *"not built"* while
+`NEXT-STEPS.md` recorded it live with 3,960 items. `«host — see LOCAL.md»`:
+673 film, 201 TV, 2,884 music, 202 podcast episodes, 19 shows, daily refresh
+at 04:00, in the backup. **Status belongs in `NEXT-STEPS.md` and nowhere else
+(§0); these lines should never have carried it.**
 
 *Here is the next film. Here is the next album.* Never the backlog.
 `[SEAN]`
@@ -1199,7 +1216,7 @@ Constraints, all inherited:
   alone. `[PROPOSED]`
 - **FND's verdict is never one of the observations.** It occupies a fixed
   slot, quoted verbatim, present every day whatever it says. The observations
-  range over non-physical data only. `[PROPOSED]` This is the structural
+  range over non-physical data only *(SUPERSEDED — §2.7 was amended three times; see §2)*. `[PROPOSED]` This is the structural
   answer to §2.7's selection gap: capping and citing constrain what a model
   *says*, but the claim can live entirely in **which** facts it picks. If the
   physical verdict can't be selected, it can't be selected *for*, and §2.7
@@ -1255,7 +1272,7 @@ in, candidate structured items come out. It stores nothing. `[PROPOSED]`
 
 ### Built and live, 2026-09-04 to 2026-09-06
 
-`capture-three-lyart.vercel.app/api/parse`, private repo `seanscol/capture`,
+`«host — see LOCAL.md»/api/parse`, private repo `seanscol/capture`,
 model **claude-haiku-4-5**. The ADHD app is wired to it on every capture
 path. Two real dictations exist as acceptance tests; a third would still be
 worth more than further tuning.
@@ -1652,7 +1669,7 @@ weakens it — it is the *editing* that forks, not the checking.
    dictations (§10).
 3. ~~**Wire the ADHD app to it.**~~ **Done** — every capture path, not just
    the one the contract names (§5.4).
-4. **Routine app — next.** First app on the shared package. Boundary with
+4. ~~**Routine app.**~~ **Live since 2026-09-06**, 45 commits, now merging into global (§8). *Correction 2026-09-17: this said "next".* First app on the shared package. Boundary with
    the task app decided; sequence in §8.
 5. **Global, phase 1 — the physical record.** `[SEAN 2026-09-08]` **The
    app's home is areas, of which health is the first** — likely a white

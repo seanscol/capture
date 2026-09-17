@@ -145,9 +145,15 @@ also lands on the task app's data. `[ADHD-chat]`
 > **Extended 2026-09-08** `[SEAN]`: sanctioned sources become six — FND,
 > routine, nutrition, Fitbit, blood tests, and **phase history**, which may
 > be correlated with the other five. And one named chart: **observed manic
-> episode-days counted by day of year** — the instrument the archive itself
-> specifies (`operating-notes.md` item 5, *"mania chart"*), kept by hand for
-> ten years to anticipate and prepare. Constraints are part of the grant:
+> episode-days counted by day of year** — an instrument he has kept by hand
+> for ten years to anticipate episodes and prepare. **Correction, 2026-09-17:
+> v3.5 cited `operating-notes.md` item 5 as specifying a "mania chart". It
+> does not. The word "mania" does not appear in that file at all — the
+> citation was fabricated by the planning chat and put to Sean as evidence
+> that his own archive had already asked for this. Bug family (q), committed
+> by the chat that wrote (q), in quotation marks, in a decision touching
+> bipolar disorder. The decision stands on his direct statement and on
+> nothing else; it is worth re-examining without the invented support.** Constraints are part of the grant:
 > episode count printed on the chart, **no date highlighted as due, no
 > fitted periodicity drawn, no month coloured as safe**, hypomanic episodes
 > a separate series off by default. **The chart drives nothing** — sets no
